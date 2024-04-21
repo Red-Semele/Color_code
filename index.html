@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Social Deduction Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    #startScreen {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <div id="startScreen">
+        <h1>Welcome to Color Social Deduction Game</h1>
+        <p>Please enter the number of players:</p>
+        <input type="number" id="numPlayers" min="3" max="10">
+        <button onclick="beginGame()">Test begin Game</button>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+    <div id="playerNames">
+        <h2>Enter Player Names</h2>
+        <div id="nameInputs"></div>
+    </div>
+
+    <div id="gameScreen" style="display: none;">
+        <h1>Color Social Deduction Game</h1>
+        <div>
+        <button id = "endTurnBtn" onclick="endTurn()">End Turn</button>
+        <button id="beginTurnBtn" style="display: none;" onclick="beginTurn()">Begin Turn</button>
+        </div>
+        <div id="playerOptions">
+            <div>
+                <label for="message">Message:</label>
+                <select id="colorSend">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+                <input type="text" id="message">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+
+            <div>
+                <label for="spy">Spy on color:</label>
+                <select id="spy">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+                <button onclick="spyColor()">Spy</button>
+            </div>
+
+            <div>
+                <label for="fake-color">Fake a message as:</label>
+                <select id="fake-color">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+                <label for="fake-message">Message:</label>
+                <select id="colorSendFake">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+                <input type="text" id="fake-message">
+                <button onclick="fakeMessage()">Send Fake Message</button>
+            </div>
+            <div>
+            <button onclick="colorVote()">Vote for colors</button>
+            <select id="vote-color">
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="yellow">Yellow</option>
+                <option value="purple">Purple</option>
+            </select>
+            <select id="vote-name">
+                <option value="red">Red</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="yellow">Yellow</option>
+                <option value="purple">Purple</option>
+            </select>
+                <div id="voteCounts"></div>
+                <div id="colorVotesTable">
+                    <p>Color votes:</p>
+                    <h2>Color Votes</h2>
+                </div>
+            </div>
+            <p>Messages:</p>
+            <div id="messages"></div>
+        </div>
+        <div id="FadedOptions">
+            <button onclick="reviveFadedColor()">Revive yourself</button>
+            <button onclick="scrambleMessage(message)">Scramble a message</button>
+        </div>
+    </div>
+</div>
+<script src="main.js"></script>
+</body>
+</html>

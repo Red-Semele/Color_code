@@ -8,10 +8,14 @@ const messages = [];
 let voter = currentPlayerColor
 let votes = [];
 let numPlayers = 0
+let currentPlayerIsFaded
 let fadedColors = {}; // Object to track faded colors and their energy points
+let playerColor = currentPlayerColor;
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
 document.getElementById('FadedOptions').style.display = 'none';
+document.getElementById('sendAs').style.display = 'none';
+
 
 
 
@@ -184,12 +188,14 @@ function beginTurn() {
   checkVotes(currentPlayerColor);
   //displayMessages()
   // Check if the current player is a faded color
-  const currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
+  currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
    // Display faded options if the current player is faded
   if (currentPlayerIsFaded) {
-    document.getElementById('FadedOptions').style.display = 'block';
+    document.getElementById('FadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
+    document.getElementById('sendAs').style.display = 'inline';
   } else {
     document.getElementById('FadedOptions').style.display = 'none';
+    document.getElementById('sendAs').style.display = 'none';
   }
   // Show game elements and hide begin turn button
   document.getElementById('beginTurnBtn').style.display = 'none';
@@ -208,11 +214,24 @@ function beginTurn() {
 
 
     function sendMessage() {
-      //TODO: Add the ability to send messages to certain colors, now it just sends the message to everyone.
+      //TODO: Make it impossible to send a message without anything in it.
       //I should probably have third thing that gets pushed in the messages, namely the color of the person you send the message to.
       //const playerColor = playerColors[currentPlayerIndex]; //TODO: For some reason playerColor is undefined here. It shows up in my messages undefined anyway.
       console.log(currentPlayerColor)
-      const playerColor = currentPlayerColor; 
+      currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
+ 
+      
+      const sendAs = document.getElementById('sendAs').value;
+      if (currentPlayerIsFaded) {
+        if (sendAs === 'faded') {
+          playerColor = "Faded Color"
+        } else {
+          playerColor = currentPlayerColor; 
+        }
+      } else {
+        playerColor = currentPlayerColor; 
+      }
+
       const receivingColor = document.getElementById('colorSend').value;
       console.log(playerColor)
       const message = document.getElementById('message').value;
@@ -396,8 +415,14 @@ function checkVotes() {
   const totalVotesForPlayer = countVotes()[currentPlayerColor];
   alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes.`);
   // Check if the player received more than half of the total votes and if the number of correct votes is greater than half
-  if (numCorrectVotes > ((numPlayers - 1) / 2)) {
-    alert(`You got found out. You are now a faded color.`);
+  currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
+  if (!currentPlayerIsFaded) {
+    //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
+    if (numCorrectVotes > ((numPlayers - 1) / 2)) {
+      alert(`You got found out. You are now a faded color.`);
+    }
+  } else {
+    alert(`the majority still thinks it was you.`)
   }
 }
 

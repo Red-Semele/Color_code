@@ -245,7 +245,8 @@ function beginTurn() {
   }
 
   function displayAssignedColors(colors) {
-    const messagesDiv = document.getElementById('messages');
+    const messagesDiv = document.getElementById('messages'); //TODO: PRobably use a different div for this.
+    
     messagesDiv.innerHTML = '<h2>Assigned Colors</h2>';
     colors.forEach((color, index) => {
         const playerNumber = index + 1;
@@ -283,10 +284,20 @@ function colorVote() {
   const voteColor = document.getElementById('vote-color').value;
   const voteName = document.getElementById('vote-name').value;
   voter = currentPlayerColor
+  if (voteColor.trim() === '' || voteName.trim() === '') {
+    alert('There are no vote options left. Revoke a vote if you want to change it.');
+    return; // Exit the function early
+  }
+  
 
   // Remove the selected color and name from the dropdown menus
   removeOptionFromSelect(voteColorSelect, voteColor, voter);
   removeOptionFromSelect(voteNameSelect, voteName, voter);
+  //TODO: For some reason the code doesn't trigger.
+  if (voteColor.trim() === '' || voteName.trim() === '') {
+    alert('Please select both a color and a name to vote.'); //TODO: Use this code to make the option dissapear.
+    return; // Exit the function early
+  }
 
   colorVotes.push({ voteColor, voteName, voter });
   console.log(colorVotes); // Optionally, you can log the array to verify it's working
@@ -336,7 +347,8 @@ function revokeVote(index) {
   // Add the revoked color and name back to the dropdown menus
   const colorOption = document.createElement('option');
   colorOption.value = revokedVote.voteColor;
-  colorOption.textContent = revokedVote.voteColor;
+  //colorOption.textContent = revokedVote.voteColor;
+  colorOption.textContent = revokedVote.voteColor.charAt(0).toUpperCase() + revokedVote.voteColor.slice(1);
   voteColorSelect.appendChild(colorOption);
 
   const nameOption = document.createElement('option');
@@ -432,14 +444,16 @@ function updateVoteOptions() {
 
   // Repopulate the options for the new current player
   playerColors.forEach((color, index) => {
+    
     const optionColor = document.createElement('option');
     optionColor.value = color;
-    optionColor.textContent = color;
+    //optionColor.textContent = color;
+    optionColor.textContent = color.charAt(0).toUpperCase() + color.slice(1);
     voteColorSelect.appendChild(optionColor);
 
     const optionName = document.createElement('option');
     optionName.value = playerNamesVoteOption[index]; 
-    optionName.textContent = playerNamesVoteOption[index];  //TODO: It works with playerNames but with this it just shows up empty, find out why.
+    optionName.textContent = playerNamesVoteOption[index];
     voteNameSelect.appendChild(optionName);
   });
 }

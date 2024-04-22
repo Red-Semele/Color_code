@@ -79,27 +79,28 @@
                 <input type="text" id="fake-message">
                 <button onclick="fakeMessage()">Send Fake Message</button>
             </div>
-            <div>
-            <button onclick="colorVote()">Vote for colors</button>
-            <select id="vote-color">
-                <option value="red">Red</option>
-                <option value="blue">Blue</option>
-                <option value="green">Green</option>
-                <option value="yellow">Yellow</option>
-                <option value="purple">Purple</option>
-            </select>
-            <select id="vote-name">
-                <option value="red">Red</option>
-                <option value="blue">Blue</option>
-                <option value="green">Green</option>
-                <option value="yellow">Yellow</option>
-                <option value="purple">Purple</option>
-            </select>
-                <div id="voteCounts"></div>
-                <div id="colorVotesTable">
-                    <p>Color votes:</p>
-                    <h2>Color Votes</h2>
-                </div>
+            <div id="colorVoting">
+                <button onclick="colorVote()">Vote for colors</button>
+                <select id="vote-color">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+                <select id="vote-name">
+                    <option value="red">Red</option>
+                    <option value="blue">Blue</option>
+                    <option value="green">Green</option>
+                    <option value="yellow">Yellow</option>
+                    <option value="purple">Purple</option>
+                </select>
+            </div>
+            <div id="voteCounts"></div>
+            <div id="colorVotesTable">
+                <p>Color votes:</p>
+                <h2>Color Votes</h2>
+            </div>
             </div>
             <p>Messages:</p>
             <div id="messages"></div>

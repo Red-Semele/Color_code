@@ -8,9 +8,10 @@ const messages = [];
 let voter = currentPlayerColor
 let votes = [];
 let numPlayers = 0
-let currentPlayerIsFaded
+let currentPlayerIsFaded = [];
 let fadedColors = {}; // Object to track faded colors and their energy points
 let playerColor = currentPlayerColor;
+let playerPoints = 0 //TODO: craft a system that can give points to specific players.
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
 document.getElementById('FadedOptions').style.display = 'none';
@@ -193,9 +194,12 @@ function beginTurn() {
   if (currentPlayerIsFaded) {
     document.getElementById('FadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
     document.getElementById('sendAs').style.display = 'inline';
+    console.log("The player is correctly seen as a faded color. TEST. ")
   } else {
     document.getElementById('FadedOptions').style.display = 'none';
     document.getElementById('sendAs').style.display = 'none';
+    console.log("The player is not seen as a faded color. TEST. ") //TODO: The player is wrongfully seen as not faded when they are faded.
+    console.log(currentPlayerIsFaded)
   }
   // Show game elements and hide begin turn button
   document.getElementById('beginTurnBtn').style.display = 'none';
@@ -413,13 +417,18 @@ function checkVotes() {
   const correctVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === playerNames[currentPlayerIndex]);
   const numCorrectVotes = correctVotes.length;
   const totalVotesForPlayer = countVotes()[currentPlayerColor];
-  alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes.`);
+  const numWrongVotes = (totalVotesForPlayer - numCorrectVotes)
+  alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotes} wrong votes.`);
+  //TODO: Give the player extra points for every wrong answer they recieved and detract a few for every correct vote they recieved.
   // Check if the player received more than half of the total votes and if the number of correct votes is greater than half
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (!currentPlayerIsFaded) {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
     if (numCorrectVotes > ((numPlayers - 1) / 2)) {
       alert(`You got found out. You are now a faded color.`);
+      fadedColors[currentPlayerColor] = true;
+      //TODO: Subtract all points from this player and give them to the other already faded ones.
+      //TODO: add currentplayercolor to fadedColors, that way hopefully it will make currentPlayerIsFaded true.
     }
   } else {
     alert(`the majority still thinks it was you.`)
@@ -443,6 +452,7 @@ function specialMove() {
 function reviveFadedColor() {
   const fadedColor = currentPlayerColor;
   const energyPoints = fadedColors[fadedColor];
+  console.log(energyPoints)
   
   if (energyPoints >= reviveThreshold) {
     // Logic to revive the faded color

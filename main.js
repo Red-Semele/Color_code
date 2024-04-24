@@ -20,7 +20,7 @@ let roundCount = 0; // Variable to track the current round
 
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
-document.getElementById('FadedOptions').style.display = 'none';
+document.getElementById('fadedOptions').style.display = 'none';
 document.getElementById('sendAs').style.display = 'none';
 
 
@@ -189,6 +189,12 @@ function endTurn() {
   if (roundCount >= roundLimit) {
     // End the game
     alert("The game has ended.");
+    document.getElementById('playerOptions').style.display = 'none';
+    document.getElementById('fadedOptions').style.display = 'none';
+
+    endGame() 
+
+
     // You can add further logic here to display the final scores or perform any other end-game actions.
   }
   currentPlayerColor = playerColors[currentPlayerIndex];
@@ -213,11 +219,11 @@ function beginTurn() {
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
    // Display faded options if the current player is faded
   if (currentPlayerIsFaded) {
-    document.getElementById('FadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
+    document.getElementById('fadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
     document.getElementById('sendAs').style.display = 'inline';
     console.log("The player is correctly seen as a faded color. TEST. ")
   } else {
-    document.getElementById('FadedOptions').style.display = 'none';
+    document.getElementById('fadedOptions').style.display = 'none';
     document.getElementById('sendAs').style.display = 'none';
     console.log("The player is not seen as a faded color. TEST. ") //TODO: The player is wrongfully seen as not faded when they are faded.
     console.log(currentPlayerIsFaded)
@@ -561,5 +567,47 @@ function displayPlayerPoints() {
         pointsDiv.appendChild(playerPointsDiv);
       }
     }
+  });
+}
+
+function endGame() {
+  const endGameDiv = document.getElementById('endGame');
+  endGameDiv.innerHTML = '<h2>End of Game</h2>';
+
+  // Extract points of each player
+  const playerPointsArray = playerNames.map(name => ({ name, points: playerPoints[name], color: playerColors[playerNames.indexOf(name)] }));
+
+  // Sort players by points in descending order
+  playerPointsArray.sort((a, b) => b.points - a.points);
+
+  let rank = 1; // Start with rank 1
+  let prevPoints = playerPointsArray[0].points;
+
+  // Display players
+  playerPointsArray.forEach((player, index) => {
+    const { name, color, points } = player;
+    const playerInfoDiv = document.createElement('div');
+    let playerRank = rank; // Store the current rank before adjustment
+
+    if (fadedColors.hasOwnProperty(color) && points === prevPoints) {
+      rank--; // Decrement the rank for faded colors with the same points
+      if (fadedColors.hasOwnProperty(color)) {
+        if (rank === 1) { // Add "Faded colors:" text before the first faded player
+          const fadedText = document.createElement('div');
+          fadedText.textContent = 'Faded colors:';
+          endGameDiv.appendChild(fadedText);
+        }
+        rank++; // Increment the rank for other faded players
+        prevPoints = points; // Update previous points for faded players
+      }
+    }
+
+    // Adjust rank based on points change
+    if (points !== prevPoints) {
+      rank = index + 1; // Update rank if points change
+    }
+
+    playerInfoDiv.textContent = `Rank: ${playerRank}, Color: ${color}, Name: ${name}, Points: ${points}`;
+    endGameDiv.appendChild(playerInfoDiv);
   });
 }

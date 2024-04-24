@@ -11,7 +11,13 @@ let numPlayers = 0
 let currentPlayerIsFaded = [];
 let fadedColors = {}; // Object to track faded colors and their energy points
 let playerColor = currentPlayerColor;
-let playerPoints = 0 //TODO: craft a system that can give points to specific players.
+let playerPoints = {}; // Object to store player points
+let currentPlayerName = ""
+let turnCount = 0; // Variable to track the current turn count
+let roundLimit = 0; // Variable to store the turn limit
+let roundCount = 0; // Variable to track the current round
+
+
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
 document.getElementById('FadedOptions').style.display = 'none';
@@ -22,6 +28,7 @@ document.getElementById('sendAs').style.display = 'none';
 
 function startGame() {
   //TODO: Make sure the names you can vote on are in a random order.
+  roundLimit = parseInt(prompt("Enter the round limit:"));
   document.getElementById('playerNames').style.display = 'inline';
   const nameInputs = document.querySelectorAll('#nameInputs input');
   console.log("nameInputs:")
@@ -49,6 +56,10 @@ function startGame() {
       colors.splice(randomIndex, 1);
       console.log("test")
   }
+  // Initialize player points based on player names
+  playerNames.forEach(name => {
+    playerPoints[name] = 0; // Start each player with 0 points
+  });
   
   const fakeColorSelect = document.getElementById('fake-color');
   const colorSendFakeSelect = document.getElementById('colorSendFake');
@@ -175,6 +186,11 @@ function endTurn() {
   if (currentPlayerIndex >= numPlayers) {
       currentPlayerIndex = 0; // Reset to the first player if all players have finished their turns
   }
+  if (roundCount >= roundLimit) {
+    // End the game
+    alert("The game has ended.");
+    // You can add further logic here to display the final scores or perform any other end-game actions.
+  }
   currentPlayerColor = playerColors[currentPlayerIndex];
   console.log("Current player color: " + currentPlayerColor)
   console.log("Previous player color: " + playerColors[currentPlayerIndex-1]);
@@ -182,6 +198,11 @@ function endTurn() {
 
 
 function beginTurn() {
+  turnCount++; // Increase the turn count at the beginning of each turn
+  if (turnCount % numPlayers === 0) {
+    roundCount++; // Increase roundCounter when turnCount is divisible by numPlayers
+  }
+
   console.log(messages)
   votesDiv.innerHTML = '';
   displayAssignedColors(playerColors);
@@ -210,6 +231,7 @@ function beginTurn() {
   updateVoteOptions();
   displayMessages()
   displayColorVotes()
+  currentPlayerName = playerNames[currentPlayerIndex];
 }
 
 
@@ -414,11 +436,27 @@ function displayVoteCounts() {
 }
 
 function checkVotes() {
-  const correctVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === playerNames[currentPlayerIndex]);
+  currentPlayerName = playerNames[currentPlayerIndex];
+  const correctVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === currentPlayerName);
   const numCorrectVotes = correctVotes.length;
-  const totalVotesForPlayer = countVotes()[currentPlayerColor];
-  const numWrongVotes = (totalVotesForPlayer - numCorrectVotes)
-  alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotes} wrong votes.`);
+  // Filter votes where color is correct but name is wrong
+  const wrongNameVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName !== currentPlayerName);
+  console.log(wrongNameVotes)
+  const numWrongNameVotes = wrongNameVotes.length
+  console.log("numWrongNameVotes")
+  console.log(numWrongNameVotes)
+
+  // Filter votes where name is correct but color is wrong
+  const wrongColorVotes = colorVotes.filter(vote => vote.voteColor !== currentPlayerColor && vote.voteName === currentPlayerName);
+  const numWrongColorVotes = wrongColorVotes.length
+  console.log("numWrongColorVotes")
+  console.log(numWrongColorVotes)
+  // Combine both types of wrong votes
+  const numWrongVotesTotal = (numWrongNameVotes + numWrongColorVotes)
+  const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
+  alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
+  awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+  
   //TODO: Give the player extra points for every wrong answer they recieved and detract a few for every correct vote they recieved.
   // Check if the player received more than half of the total votes and if the number of correct votes is greater than half
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
@@ -426,13 +464,14 @@ function checkVotes() {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
     if (numCorrectVotes > ((numPlayers - 1) / 2)) {
       alert(`You got found out. You are now a faded color.`);
+      deductPoints(currentPlayerName, playerPoints[playerNames[currentPlayerIndex]])
+      //TODO: Give the points you deducted to all fadedColors that already exist.
       fadedColors[currentPlayerColor] = true;
-      //TODO: Subtract all points from this player and give them to the other already faded ones.
-      //TODO: add currentplayercolor to fadedColors, that way hopefully it will make currentPlayerIsFaded true.
     }
   } else {
     alert(`the majority still thinks it was you.`)
   }
+  displayPlayerPoints()
 }
 
 function specialMove() {
@@ -490,5 +529,37 @@ function updateVoteOptions() {
     optionName.value = playerNamesVoteOption[index]; 
     optionName.textContent = playerNamesVoteOption[index];
     voteNameSelect.appendChild(optionName);
+  });
+}
+function awardPoints(playerName, points) {
+  console.log("Attempted to give points to:")
+  console.log(playerName)
+  //TODO: I doubt that this works entirely right, so so try to fix it a bit.
+  playerPoints[playerName] += points;
+}
+
+function deductPoints(playerName, points) {
+  playerPoints[playerName] -= points;
+}
+
+function displayPlayerPoints() {
+  //TODO: This now displays the names and the point, but it also shows the currentplayercolor with: "NaN" next to it. try to fix that.
+  const pointsDiv = document.getElementById('playerPoints');
+
+  // Clear previous points display
+  pointsDiv.innerHTML = '';
+  // Get the current player's name
+  currentPlayerName = playerNames[currentPlayerIndex];
+
+  // Iterate over each player and display their points
+  console.log(playerPoints)
+  Object.entries(playerPoints).forEach(([name, points]) => {
+    if (!isNaN(points)) {
+      if (name === currentPlayerName) {
+        const playerPointsDiv = document.createElement('div');
+        playerPointsDiv.textContent = `${name}: ${points}`;
+        pointsDiv.appendChild(playerPointsDiv);
+      }
+    }
   });
 }

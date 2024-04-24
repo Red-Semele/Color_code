@@ -16,12 +16,17 @@ let currentPlayerName = ""
 let turnCount = 0; // Variable to track the current turn count
 let roundLimit = 0; // Variable to store the turn limit
 let roundCount = 0; // Variable to track the current round
+let actionCount = 0;
 
 
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
 document.getElementById('fadedOptions').style.display = 'none';
 document.getElementById('sendAs').style.display = 'none';
+document.getElementById('sendMessageAction').style.display = 'none';
+document.getElementById('spyAction').style.display = 'none';
+document.getElementById('fakeAction').style.display = 'none';
+
 
 
 
@@ -270,18 +275,26 @@ function beginTurn() {
         messages.push({ playerColor, message, receivingColor });
         console.log("Player color after assignment:", playerColor);
         displayMessages();
+        actionButtons();
     }
 
     function spyColor() {
-      const playerColor = playerColors[currentPlayerIndex];
       const spyColor = document.getElementById('spy').value;
-      if (playerColor === spyColor) {
-          alert("You cannot spy on your own messages!");
-          return;
-      }
-      const spyMessages = messages.filter(msg => msg.playerColor === spyColor);
-      alert("Messages for " + spyColor + ": \n" + spyMessages.map(msg => msg.message).join("\n"));
+
+      // Filter messages where either the sender or the receiver matches the spy color
+      const spyMessages = messages.filter(msg => msg.playerColor === spyColor || msg.receivingColor === spyColor);
+
+    // Prepare the message for display
+    let messageText = `Messages for ${spyColor}:\n`;
+    spyMessages.forEach(msg => {
+      messageText += `${msg.playerColor}: ${msg.message}\n`;
+    });
+
+    // Display the messages
+    alert(messageText);
+    actionButtons();
     }
+    
   
   function fakeMessage() {
       const playerColor = document.getElementById('fake-color').value;
@@ -293,6 +306,7 @@ function beginTurn() {
       const message = document.getElementById('fake-message').value;
       messages.push({ playerColor, message, receivingColor });
       displayMessages();
+      actionButtons();
   }
 
   function displayAssignedColors(colors) {
@@ -610,4 +624,62 @@ function endGame() {
     playerInfoDiv.textContent = `Rank: ${playerRank}, Color: ${color}, Name: ${name}, Points: ${points}`;
     endGameDiv.appendChild(playerInfoDiv);
   });
+}
+
+function actionButtons() {
+  document.getElementById('sendMessageAction').style.display = 'none';
+  document.getElementById('spyAction').style.display = 'none';
+  document.getElementById('fakeAction').style.display = 'none';
+  document.getElementById('fakeBtnDiv').style.display = 'inline';
+  document.getElementById('messageBtnDiv').style.display = 'inline';
+  document.getElementById('spyBtnDiv').style.display = 'inline';
+  //TODO make this show the variety of buttons you can press, make it be divided in fake message, spy, send message.
+  if (actionCount === 1) {
+    console.log(actionCount)
+    alert('You have already taken an action this turn.'); //TODO: Actually make this clear the gamescreen there is a bug right now where the system basically tells you this but still lets you take other actions, this could be fixed by just making those options dissapear. A bit unintuitive maybe but good enough for now.
+    return;
+  }
+  actionCount += 1
+}
+
+function spyButton() {
+  //TODO: Make this show the options for spying etc.
+  document.getElementById('sendMessageAction').style.display = 'inline';
+  document.getElementById('spyAction').style.display = 'none';
+  document.getElementById('fakeAction').style.display = 'none';
+  document.getElementById('fakeBtnDiv').style.display = 'none';
+  document.getElementById('messageBtnDiv').style.display = 'none';
+  document.getElementById('spyBtnDiv').style.display = 'none';
+  
+
+}
+
+function fakeButton() {
+  //TODO: Make this show the options for faking etc.
+  document.getElementById('fakeAction').style.display = 'inline';
+  document.getElementById('sendMessageAction').style.display = 'none';
+  document.getElementById('spyAction').style.display = 'none';
+  document.getElementById('spyBtnDiv').style.display = 'none';
+  document.getElementById('messageBtnDiv').style.display = 'none';
+  document.getElementById('fakeBtnDiv').style.display = 'none';
+}
+
+function messageButton() {
+  //TODO: Make this show the options for messaging etc.
+  document.getElementById('spyAction').style.display = 'inline';
+  document.getElementById('sendMessageAction').style.display = 'none';
+  document.getElementById('fakeAction').style.display = 'none';
+  document.getElementById('spyBtnDiv').style.display = 'none';
+  document.getElementById('fakeBtnDiv').style.display = 'none';
+  document.getElementById('messageBtnDiv').style.display = 'none';
+}
+
+function fadedButton() {
+  //TODO: Make this show the options Faded colors have.
+}
+
+function undoChoice() {
+  actionCount -= 1
+  actionButtons()
+
 }

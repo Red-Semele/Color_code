@@ -34,8 +34,21 @@
         <button id="beginTurnBtn" style="display: none;" onclick="beginTurn()">Begin Turn</button>
         </div>
         <div id="playerOptions">
+            <div id="performAction">
+                <div id="spyBtnDiv">
+                    <button onclick="spyButton()">Spy on a color to see the messages they send and recieve this round.</button>
+                </div>
+                <div id="fakeBtnDiv">
+                    <button onclick="fakeButton()">Impersonate another color and send a message.</button>
+                </div>
+                <div id="messageBtnDiv">
+                    <button onclick="messageButton()">Send a message.</button>
+                </div>
+                
+
+            </div>
             <div id="playerPoints"></div>
-            <div>
+            <div id="sendMessageAction">
                 <label for="message">Message:</label>
                 <select id="colorSend">
                     <option value="red">Red</option>
@@ -52,9 +65,10 @@
             
                 <input type="text" id="message">
                 <button onclick="sendMessage()">Send</button>
+                <button onclick="undoChoice()">Go back</button>
             </div>
 
-            <div>
+            <div id="spyAction">
                 <label for="spy">Spy on color:</label>
                 <select id="spy">
                     <option value="red">Red</option>
@@ -64,9 +78,10 @@
                     <option value="purple">Purple</option>
                 </select>
                 <button onclick="spyColor()">Spy</button>
+                <button onclick="undoChoice()">Go back</button>
             </div>
 
-            <div>
+            <div id="fakeAction">
                 <label for="fake-color">Fake a message as:</label>
                 <select id="fake-color">
                     <option value="red">Red</option>
@@ -85,9 +100,12 @@
                 </select>
                 <input type="text" id="fake-message">
                 <button onclick="fakeMessage()">Send Fake Message</button>
+                <button onclick="undoChoice()">Go back</button>
             </div>
             <div id="colorVoting">
                 <button onclick="colorVote()">Vote for colors</button>
+                
+                
                 <select id="vote-color">
                     <option value="red">Red</option>
                     <option value="blue">Blue</option>

@@ -26,6 +26,15 @@
         <h2>Enter Player Names</h2>
         <div id="nameInputs"></div>
     </div>
+    <div id="gameSettings">
+        <h2>Checkbox Settings</h2>
+
+        <label for="setting1">
+        <input type="checkbox" id="eraseMessages"> Erase messages
+        </label><br>
+
+        <button onclick="saveSettings()">Save Settings</button>
+    </div>
 
     <div id="gameScreen" style="display: none;">
         <h1>Color Social Deduction Game</h1>
@@ -134,6 +143,8 @@
         </div>
         <div id="fadedOptions">
             <button onclick="reviveFadedColor()">Revive yourself</button>
+            <div id="messagesSentByColor"></div>
+            <select id="scramble-color"></select>
             <button onclick="scrambleMessage(message)">Scramble a message</button>
         </div>
         <div id="endGame">

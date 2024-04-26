@@ -17,6 +17,8 @@ let turnCount = 0; // Variable to track the current turn count
 let roundLimit = 0; // Variable to store the turn limit
 let roundCount = 0; // Variable to track the current round
 let actionCount = 0;
+let fadedColorStolenPoints = 0;
+let messagesByRound = [];
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -102,6 +104,7 @@ function startGame() {
 });
 
   console.log(playerColors)
+  document.getElementById('gameSettings').style.display = 'none';
   // Hide start screen
   document.getElementById('startScreen').style.display = 'none';
   // Show game screen
@@ -178,6 +181,7 @@ function beginGame() {
 }
 
 function endTurn() {
+  actionCount = 0
   console.log(messages)
   //document.getElementById('messages').innerHTML = 'none';
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
@@ -242,6 +246,7 @@ function beginTurn() {
   updateVoteOptions();
   displayMessages()
   displayColorVotes()
+  updateColorOptions()
   currentPlayerName = playerNames[currentPlayerIndex];
 }
 
@@ -251,6 +256,10 @@ function beginTurn() {
 
 
     function sendMessage() {
+      if (actionCount === 1) {
+        alert('You have already taken an action this turn.');
+        return;
+      }
       //TODO: Make it impossible to send a message without anything in it.
       //I should probably have third thing that gets pushed in the messages, namely the color of the person you send the message to.
       //const playerColor = playerColors[currentPlayerIndex]; //TODO: For some reason playerColor is undefined here. It shows up in my messages undefined anyway.
@@ -279,6 +288,10 @@ function beginTurn() {
     }
 
     function spyColor() {
+      if (actionCount === 1) {
+        alert('You have already taken an action this turn.');
+        return;
+      }
       const spyColor = document.getElementById('spy').value;
 
       // Filter messages where either the sender or the receiver matches the spy color
@@ -297,6 +310,10 @@ function beginTurn() {
     
   
   function fakeMessage() {
+    if (actionCount === 1) {
+      alert('You have already taken an action this turn.');
+      return;
+    }
       const playerColor = document.getElementById('fake-color').value;
       const receivingColor = document.getElementById('colorSendFake').value;
       //if (playerColor === fakeColor) {
@@ -326,6 +343,8 @@ function beginTurn() {
   }
 
   function displayMessages() {
+      storeMessagesForRound();
+    
     console.log(messages)
     const messagesDiv = document.getElementById('messages');
     messagesDiv.innerHTML = ''; // Clear previous messages before appending new ones
@@ -340,6 +359,7 @@ function beginTurn() {
         messagesDiv.appendChild(messageDiv);
       }
     });
+    displayMessagesByRound(roundCount)
   
 }
 
@@ -476,6 +496,7 @@ function checkVotes() {
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
   alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
   awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+  deductPoints(currentPlayerName, (2*numCorrectVotes))
   
   //TODO: Give the player extra points for every wrong answer they recieved and detract a few for every correct vote they recieved.
   // Check if the player received more than half of the total votes and if the number of correct votes is greater than half
@@ -484,9 +505,24 @@ function checkVotes() {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
     if (numCorrectVotes > ((numPlayers - 1) / 2)) {
       alert(`You got found out. You are now a faded color.`);
-      deductPoints(currentPlayerName, playerPoints[playerNames[currentPlayerIndex]])
-      //TODO: Give the points you deducted to all fadedColors that already exist.
       fadedColors[currentPlayerColor] = true;
+      if ((Object.keys(fadedColors).length - 1) !== 0) {
+        //The above line is to make sure you don't divide by zero
+        fadedColorStolenPoints = playerPoints[currentPlayerName]/ ( Object.keys(fadedColors).length - 1)
+        console.log("fadedColorStolenPoints" + fadedColorStolenPoints)
+        console.log( Object.keys(fadedColors).length)
+        playerColors.forEach(playerColor => {
+          if (fadedColors.hasOwnProperty(playerColor)){
+          awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And htne replace playercolor here by that.
+          }
+          console.log(fadedColorStolenPoints) //TODO: For some reason there is an error right next to it
+          //TODO: Test out this experimental code, check out to see if this works or not. Alos, I want it to not trigger for each playerName but for each playername in fadedcolor
+        });
+      }
+      
+      deductPoints(currentPlayerName, playerPoints[currentPlayerName])
+      //TODO: Give the points you deducted to all fadedColors that already exist. So divide the amount of points you just detracted by the amount of fadedcolors, asign that number to each faded color.
+      
     }
   } else {
     alert(`the majority still thinks it was you.`)
@@ -496,7 +532,7 @@ function checkVotes() {
 
 function specialMove() {
   const fadedColor = currentPlayerColor;
-  const energyPoints = fadedColors[fadedColor];
+  const energyPoints = fadedColors[fadedColor]; //TODO: Convert the energypoint to the regular point vaibale to make sure that it properly works.
   
   // Check if enough energy points are available for the special move
   if (energyPoints >= requiredEnergyPoints) {
@@ -521,11 +557,68 @@ function reviveFadedColor() {
   }
 }
 
-function scrambleMessage(message) {
-  // Logic to scramble the message
-  // For example, shuffle the characters randomly
-  const scrambledMessage = message.split('').sort(() => Math.random() - 0.5).join('');
-  return scrambledMessage;
+function scrambleMessage() {
+  // Get the color whose message to scramble
+  const colorSelect = document.getElementById('scramble-color');
+  const selectedColor = colorSelect.value;
+
+  // Find the message sent by the selected color during the current turn
+  const message = messages.find(msg => msg.playerColor === selectedColor);
+
+  if (message) {
+    // Scramble the message
+    const scrambledMessage = scrambleText(message.message);
+
+    // Display the scrambled message
+    alert(`Scrambled Message from ${selectedColor}: ${scrambledMessage}`);
+  } else {
+    alert('No message found from the selected color.');
+  }
+}
+
+function scrambleText(text) {
+  // Split the text into an array of characters
+  const characters = text.split('');
+
+  // Shuffle the characters randomly
+  for (let i = characters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [characters[i], characters[j]] = [characters[j], characters[i]];
+  }
+
+  // Join the characters back into a string
+  return characters.join('');
+}
+
+function displayMessagesSentByColor(color) {
+  const messagesDiv = document.getElementById('messagesSentByColor');
+  messagesDiv.innerHTML = ''; // Clear previous messages before appending new ones
+
+  // Find all messages sent by the specified color during the current turn
+  const colorMessages = messages.filter(msg => msg.playerColor === color);
+
+  // Display each message sent by the color
+  colorMessages.forEach(msg => {
+    const messageDiv = document.createElement('div');
+    messageDiv.textContent = `${msg.playerColor}: ${msg.message}`;
+    messagesDiv.appendChild(messageDiv);
+  });
+}
+
+function updateColorOptions() {
+  const colorSelect = document.getElementById('scramble-color');
+  colorSelect.innerHTML = ''; // Clear previous options
+
+  // Get the colors that sent messages during the current turn
+  const colorsWithMessages = [...new Set(messages.map(msg => msg.playerColor))];
+
+  // Populate the color select dropdown with the colors that sent messages
+  colorsWithMessages.forEach(color => {
+    const option = document.createElement('option');
+    option.value = color;
+    option.textContent = color.charAt(0).toUpperCase() + color.slice(1); // Capitalize first letter
+    colorSelect.appendChild(option);
+  });
 }
 
 function updateVoteOptions() {
@@ -644,8 +737,8 @@ function actionButtons() {
 
 function spyButton() {
   //TODO: Make this show the options for spying etc.
-  document.getElementById('sendMessageAction').style.display = 'inline';
-  document.getElementById('spyAction').style.display = 'none';
+  document.getElementById('sendMessageAction').style.display = 'none';
+  document.getElementById('spyAction').style.display = 'inline';
   document.getElementById('fakeAction').style.display = 'none';
   document.getElementById('fakeBtnDiv').style.display = 'none';
   document.getElementById('messageBtnDiv').style.display = 'none';
@@ -666,8 +759,8 @@ function fakeButton() {
 
 function messageButton() {
   //TODO: Make this show the options for messaging etc.
-  document.getElementById('spyAction').style.display = 'inline';
-  document.getElementById('sendMessageAction').style.display = 'none';
+  document.getElementById('spyAction').style.display = 'none';
+  document.getElementById('sendMessageAction').style.display = 'inline';
   document.getElementById('fakeAction').style.display = 'none';
   document.getElementById('spyBtnDiv').style.display = 'none';
   document.getElementById('fakeBtnDiv').style.display = 'none';
@@ -682,4 +775,40 @@ function undoChoice() {
   actionCount -= 1
   actionButtons()
 
+}
+
+function displayMessagesByRound(round) {
+  const messagesDiv = document.getElementById('messages');
+  messagesDiv.innerHTML = ''; // Clear previous messages
+
+  // Display messages for the specified round
+  if (round > 0 && round <= messagesByRound.length) {
+    messagesByRound[round - 1].forEach(msg => {
+      console.log(msg.receivingColor + "Receiver");
+      console.log(currentPlayerColor);
+      if (msg.receivingColor === currentPlayerColor) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = `${msg.playerColor}: ${msg.message}`;
+        messagesDiv.appendChild(messageDiv);
+      }
+    });
+  } else {
+    console.log("Invalid round number.");
+  }
+}
+
+function storeMessagesForRound() {
+  messagesByRound.push([...messages]); // Clone the messages array for the current round
+  if (eraseMessages === true) {
+    messages.length = 0; // Clear the messages array for the next round TODO: Make a setting for either enabling or diabling this. Enabling would make it harder to remember text and disabling would make it eassier.
+  }
+}
+
+function saveSettings() {
+  eraseMessages = document.getElementById('eraseMessages').checked;
+  
+  
+  // You can perform further actions here, like saving to localStorage or sending to server
+  // For now, let's just log the settings
+  console.log("eraseMessages:", eraseMessages);
 }

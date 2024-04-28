@@ -19,6 +19,9 @@ let roundCount = 0; // Variable to track the current round
 let actionCount = 0;
 let fadedColorStolenPoints = 0;
 let messagesByRound = [];
+let spyMessagesForNextRound = [];
+let revivePointCost = {};
+let revivePointCostIncreaseMultiplier = 1;
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -34,7 +37,6 @@ document.getElementById('fakeAction').style.display = 'none';
 
 
 function startGame() {
-  //TODO: Make sure the names you can vote on are in a random order.
   roundLimit = parseInt(prompt("Enter the round limit:"));
   document.getElementById('playerNames').style.display = 'inline';
   const nameInputs = document.querySelectorAll('#nameInputs input');
@@ -66,7 +68,9 @@ function startGame() {
   // Initialize player points based on player names
   playerNames.forEach(name => {
     playerPoints[name] = 0; // Start each player with 0 points
+    revivePointCost[name] = document.getElementById("slider").value;
   });
+  console.log(document.getElementById("slider").value)
   
   const fakeColorSelect = document.getElementById('fake-color');
   const colorSendFakeSelect = document.getElementById('colorSendFake');
@@ -183,7 +187,6 @@ function beginGame() {
 function endTurn() {
   actionCount = 0
   console.log(messages)
-  //document.getElementById('messages').innerHTML = 'none';
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   document.getElementById('endTurnBtn').style.display = 'none';
   document.getElementById('playerOptions').style.display = 'none';
@@ -230,23 +233,20 @@ function beginTurn() {
   if (currentPlayerIsFaded) {
     document.getElementById('fadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
     document.getElementById('sendAs').style.display = 'inline';
-    console.log("The player is correctly seen as a faded color. TEST. ")
   } else {
     document.getElementById('fadedOptions').style.display = 'none';
     document.getElementById('sendAs').style.display = 'none';
-    console.log("The player is not seen as a faded color. TEST. ") //TODO: The player is wrongfully seen as not faded when they are faded.
     console.log(currentPlayerIsFaded)
   }
   // Show game elements and hide begin turn button
   document.getElementById('beginTurnBtn').style.display = 'none';
-  //document.getElementById('messages').innerHTML = ''; // Clear previous messages
-  //document.getElementById('gameScreen').style.display = 'block';
   document.getElementById('endTurnBtn').style.display = 'inline';
   document.getElementById('playerOptions').style.display = 'inline';
   updateVoteOptions();
-  displayMessages()
-  displayColorVotes()
-  updateColorOptions()
+  displayMessages();
+  displayColorVotes();
+  updateColorOptions();
+  processSpyRequests()
   currentPlayerName = playerNames[currentPlayerIndex];
 }
 
@@ -261,7 +261,6 @@ function beginTurn() {
         return;
       }
       //TODO: Make it impossible to send a message without anything in it.
-      //I should probably have third thing that gets pushed in the messages, namely the color of the person you send the message to.
       //const playerColor = playerColors[currentPlayerIndex]; //TODO: For some reason playerColor is undefined here. It shows up in my messages undefined anyway.
       console.log(currentPlayerColor)
       currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
@@ -281,10 +280,12 @@ function beginTurn() {
       const receivingColor = document.getElementById('colorSend').value;
       console.log(playerColor)
       const message = document.getElementById('message').value;
-        messages.push({ playerColor, message, receivingColor });
+      const roundSent = roundCount
+        messages.push({ playerColor, message, receivingColor, roundSent });
         console.log("Player color after assignment:", playerColor);
         displayMessages();
         actionButtons();
+        document.getElementById('message').value = "";
     }
 
     function spyColor() {
@@ -292,20 +293,52 @@ function beginTurn() {
         alert('You have already taken an action this turn.');
         return;
       }
-      const spyColor = document.getElementById('spy').value;
+      const spiedColor = document.getElementById('spy').value;
+      const spyColor = currentPlayerColor
+       
 
       // Filter messages where either the sender or the receiver matches the spy color
-      const spyMessages = messages.filter(msg => msg.playerColor === spyColor || msg.receivingColor === spyColor);
+      const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === roundCount);
+      // Store the spy request for the next round
+      spyMessagesForNextRound.push({ spyColor, spiedColor, spyMessages });
+      console.log("Spy")
+      console.log (spyMessagesForNextRound)
 
     // Prepare the message for display
-    let messageText = `Messages for ${spyColor}:\n`;
-    spyMessages.forEach(msg => {
-      messageText += `${msg.playerColor}: ${msg.message}\n`;
-    });
+    //let messageText = `Messages for ${spyColor}:\n`;
+    //spyMessages.forEach(msg => {
+      //messageText += `${msg.playerColor}: ${msg.message}\n`;
+    //});
 
     // Display the messages
-    alert(messageText);
     actionButtons();
+    }
+
+    function processSpyRequests() {
+      console.log("pushed spy message")
+      console.log(spyMessagesForNextRound)
+      if (spyMessagesForNextRound.length === 0) return;
+      console.log("there are spy requests")
+      console.log(spyMessagesForNextRound[0].spyColor)
+      console.log(currentPlayerColor)
+      if (spyMessagesForNextRound[0].spyColor !== currentPlayerColor) return; //TODO: This should make sure that if the spyColor is not the one who is currently playing they see the requests.
+      console.log("The current player is the spy")
+      const spyRequest = spyMessagesForNextRound.shift(); // Get the first spy request
+      const spiedColor = spyRequest.spiedColor;
+    
+      // Filter messages where either the sender or the receiver matches the spy color
+      const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === (roundCount - 1));
+      console.log("spyMessages")
+      console.log(spyMessages)
+    
+      // Prepare the message for display
+      let messageText = `Messages for ${spiedColor}:\n`;
+      spyMessages.forEach(msg => {
+        messageText += `${msg.playerColor}: ${msg.message}\n`;
+      });
+    
+      // Display the messages
+      alert(messageText);
     }
     
   
@@ -321,7 +354,8 @@ function beginTurn() {
          // return;
       //}
       const message = document.getElementById('fake-message').value;
-      messages.push({ playerColor, message, receivingColor });
+      const roundSent = roundCount
+      messages.push({ playerColor, message, receivingColor, roundSent });
       displayMessages();
       actionButtons();
   }
@@ -353,7 +387,6 @@ function beginTurn() {
       console.log(msg.receivingColor + "Receciever")
       console.log(currentPlayerColor)
       if (msg.receivingColor === currentPlayerColor) {
-        //TODO: You need to make each message only append if the color of the eciever equals the current playercolor.
         const messageDiv = document.createElement('div');
         messageDiv.textContent = `${msg.playerColor}: ${msg.message}`; 
         messagesDiv.appendChild(messageDiv);
@@ -409,7 +442,6 @@ function displayColorVotes() {
   colorVotes.forEach((clrVt, index) => {
     console.log(currentPlayerColor)
     if (clrVt.voter === currentPlayerColor) {
-      //TODO: You need to make each message only append if the color of the eciever equals the current playercolor.
       const voteDiv = document.createElement('div');
       voteDiv.textContent = `${clrVt.voteColor}: ${clrVt.voteName}`; 
       // Create a button to revoke the vote
@@ -432,7 +464,6 @@ function revokeVote(index) {
   // Add the revoked color and name back to the dropdown menus
   const colorOption = document.createElement('option');
   colorOption.value = revokedVote.voteColor;
-  //colorOption.textContent = revokedVote.voteColor;
   colorOption.textContent = revokedVote.voteColor.charAt(0).toUpperCase() + revokedVote.voteColor.slice(1);
   voteColorSelect.appendChild(colorOption);
 
@@ -498,8 +529,6 @@ function checkVotes() {
   awardPoints(currentPlayerName, (1*numWrongVotesTotal))
   deductPoints(currentPlayerName, (2*numCorrectVotes))
   
-  //TODO: Give the player extra points for every wrong answer they recieved and detract a few for every correct vote they recieved.
-  // Check if the player received more than half of the total votes and if the number of correct votes is greater than half
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (!currentPlayerIsFaded) {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
@@ -513,7 +542,7 @@ function checkVotes() {
         console.log( Object.keys(fadedColors).length)
         playerColors.forEach(playerColor => {
           if (fadedColors.hasOwnProperty(playerColor)){
-          awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And htne replace playercolor here by that.
+          awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And then replace playercolor here by that.
           }
           console.log(fadedColorStolenPoints) //TODO: For some reason there is an error right next to it
           //TODO: Test out this experimental code, check out to see if this works or not. Alos, I want it to not trigger for each playerName but for each playername in fadedcolor
@@ -521,11 +550,11 @@ function checkVotes() {
       }
       
       deductPoints(currentPlayerName, playerPoints[currentPlayerName])
-      //TODO: Give the points you deducted to all fadedColors that already exist. So divide the amount of points you just detracted by the amount of fadedcolors, asign that number to each faded color.
       
     }
   } else {
     alert(`the majority still thinks it was you.`)
+    awardPoints(currentPlayerName, (1)) //TODO: Make a setting for how much points each faded color gains per turn.
   }
   displayPlayerPoints()
 }
@@ -536,7 +565,7 @@ function specialMove() {
   
   // Check if enough energy points are available for the special move
   if (energyPoints >= requiredEnergyPoints) {
-    fadedColors[fadedColor] -= requiredEnergyPoints;
+    deductPoints(currentPlayerName, requiredEnergyPoints)
     // Implement the special move logic here
     // For example, coming back to life or scrambling messages
   } else {
@@ -545,13 +574,44 @@ function specialMove() {
 }
 
 function reviveFadedColor() {
-  const fadedColor = currentPlayerColor;
-  const energyPoints = fadedColors[fadedColor];
-  console.log(energyPoints)
-  
-  if (energyPoints >= reviveThreshold) {
-    // Logic to revive the faded color
-    // For example, reset their energy points and bring them back into the game
+  //TODO: Check if the revcostincreases properly function.
+  console.log(revivePointCost[currentPlayerName] + " Revpointcost")
+  const revRules = document.getElementById('reviveRulesApplication').value;
+  const revCostIncRule = document.getElementById('revCostIncreaseRule').value;
+  revivePointCostIncreaseMultiplier = document.getElementById('revCostIncrease').value;
+  if (playerPoints[currentPlayerName] >= revivePointCost[currentPlayerName]) {
+    deductPoints(currentPlayerName, revivePointCost)
+    delete fadedColors[currentPlayerColor];
+    console.log(currentPlayerColor + " just revived.")
+    document.getElementById('fadedOptions').style.display = 'none';
+    document.getElementById('sendAs').style.display = 'none';
+    //TODO: Give an in game prompt that is not a pop-up to tell the player that they got revived
+    alert("You just revived.");
+    if (revCostIncRule === "noIncrease") {
+
+    } else {
+      if (revRules === "shared") {
+        if (revCostIncRule === "multiIncrease") {
+          playerNames.forEach(name => {
+            revivePointCost[name] *= revivePointCostIncreaseMultiplier;
+          });
+        console.log("shared cost of revive option just increased.")
+        } else if (revCostIncRule === "expoIncrease") {
+            playerNames.forEach(name => {
+              revivePointCost[name] **= revivePointCostIncreaseMultiplier;
+            });
+          console.log("shared cost of revive option just increased.")
+        }
+      } else if (revRules === "separate") {
+          if (revCostIncRule === "multiIncrease") {
+            revivePointCost[currentPlayerName] *= revivePointCostIncreaseMultiplier;
+            console.log("Revive cost for " + currentPlayerName + " just increased.")
+          } else if (revCostIncRule === "expoIncrease") {
+            revivePointCost[currentPlayerName] **= revivePointCostIncreaseMultiplier;
+            console.log("Revive cost for " + currentPlayerName + " just increased.")
+          }
+      }
+    }
   } else {
     alert("Not enough energy points to revive.");
   }
@@ -562,15 +622,29 @@ function scrambleMessage() {
   const colorSelect = document.getElementById('scramble-color');
   const selectedColor = colorSelect.value;
 
-  // Find the message sent by the selected color during the current turn
-  const message = messages.find(msg => msg.playerColor === selectedColor);
+  // Sort messages based on roundSent in descending order
+  messages.sort((a, b) => b.roundSent - a.roundSent);
 
-  if (message) {
+  // Find the message sent by the selected color during the current turn
+  const messageIndex = messages.findIndex(msg => msg.playerColor === selectedColor);
+  if (messageIndex !== -1) {
+  //const message = messages.find(msg => msg.playerColor === selectedColor);
+  const message = messages[messageIndex].message;
+
+  
     // Scramble the message
-    const scrambledMessage = scrambleText(message.message);
+    //const scrambledMessage = scrambleText(message.message);
+    console.log(messages[messageIndex].message)
+    const scrambledMessage = scrambleText(message);
+    messages[messageIndex].message = scrambledMessage;
+    console.log(messages[messageIndex].message)
+    console.log(messages)
+    //TODO: For some reason it seems to correctly replace the index, but for whatever reason it doesn't appear to work in displaying that message.
+    //It's probably because the game is unsure about at what round the message was "resent", aside from playerColor, message and revievingcolor I'll probably also will need to add "roundSent" so the game is sure of at what round a message was sent, that would make it easier for me to use less hacky approaches.
 
     // Display the scrambled message
     alert(`Scrambled Message from ${selectedColor}: ${scrambledMessage}`);
+    //TODO: Find a way to replace the real message with the scrambled one.
   } else {
     alert('No message found from the selected color.');
   }
@@ -610,7 +684,11 @@ function updateColorOptions() {
   colorSelect.innerHTML = ''; // Clear previous options
 
   // Get the colors that sent messages during the current turn
-  const colorsWithMessages = [...new Set(messages.map(msg => msg.playerColor))];
+  //const colorsWithMessages = [...new Set(messages.map(msg => msg.playerColor))];
+  const colorsWithMessages = [...new Set(messages.filter(msg => msg.roundSent === roundCount).map(msg => msg.playerColor))];
+  console.log("colorsWithMessages:")
+  console.log(colorsWithMessages)
+
 
   // Populate the color select dropdown with the colors that sent messages
   colorsWithMessages.forEach(color => {
@@ -647,7 +725,6 @@ function updateVoteOptions() {
 function awardPoints(playerName, points) {
   console.log("Attempted to give points to:")
   console.log(playerName)
-  //TODO: I doubt that this works entirely right, so so try to fix it a bit.
   playerPoints[playerName] += points;
 }
 
@@ -779,11 +856,17 @@ function undoChoice() {
 
 function displayMessagesByRound(round) {
   const messagesDiv = document.getElementById('messages');
+  //TODO: Now use the other variable, roundSent that is pushed in the message to be able to properly check when somethign was sent, first filter out of those and then do the additional filtering.
   messagesDiv.innerHTML = ''; // Clear previous messages
 
-  // Display messages for the specified round
+  // Display messages for the specified round. Make it use the roundSent instead.
   if (round > 0 && round <= messagesByRound.length) {
-    messagesByRound[round - 1].forEach(msg => {
+    //messagesByRound[round - 1].forEach(msg => {
+       // Filter messages for the specified round
+  const messagesForRound = messages.filter(msg => msg.roundSent < round);
+
+  // Display filtered messages
+  messagesForRound.forEach(msg => {
       console.log(msg.receivingColor + "Receiver");
       console.log(currentPlayerColor);
       if (msg.receivingColor === currentPlayerColor) {

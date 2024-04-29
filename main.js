@@ -53,7 +53,7 @@ function startGame() {
   }
   
   // Assign random colors to players
-  const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
+  const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'magenta', 'cyan', 'black', 'white', 'teal'];
   playerColors = [];
   console.log(playerColors)
   console.log("playernames:")
@@ -68,9 +68,9 @@ function startGame() {
   // Initialize player points based on player names
   playerNames.forEach(name => {
     playerPoints[name] = 0; // Start each player with 0 points
-    revivePointCost[name] = document.getElementById("slider").value;
+    revivePointCost[name] = document.getElementById("revCost").value;
   });
-  console.log(document.getElementById("slider").value)
+  console.log(document.getElementById("revCost").value)
   
   const fakeColorSelect = document.getElementById('fake-color');
   const colorSendFakeSelect = document.getElementById('colorSendFake');
@@ -161,8 +161,8 @@ function assignColors() {
 function beginGame() {
   numPlayers = parseInt(document.getElementById('numPlayers').value);
   console.log(numPlayers)
-  if (isNaN(numPlayers) || numPlayers < 3 || numPlayers > 10) {
-      alert("Please enter a number between 3 and 10 for the number of players.");
+  if (isNaN(numPlayers) || numPlayers < 3 || numPlayers > 12) {
+      alert("Please enter a number between 3 and 12 for the number of players.");
       return;
   }
 

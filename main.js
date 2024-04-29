@@ -113,7 +113,9 @@ function startGame() {
   document.getElementById('startScreen').style.display = 'none';
   // Show game screen
   document.getElementById('gameScreen').style.display = 'block';
-  displayAssignedColors(playerColors);
+  if (devTestSetting === true) {
+    displayAssignedColors(playerColors);
+  }
   currentPlayerIndex = 0;
   // Set the current player's color to the first player's color
   currentPlayerColor = playerColors[0];
@@ -223,7 +225,9 @@ function beginTurn() {
 
   console.log(messages)
   votesDiv.innerHTML = '';
-  displayAssignedColors(playerColors);
+  if (devTestSetting === true) {
+    displayAssignedColors(playerColors);
+  }
   displayVoteCounts();
   checkVotes(currentPlayerColor);
   //displayMessages()
@@ -889,7 +893,7 @@ function storeMessagesForRound() {
 
 function saveSettings() {
   eraseMessages = document.getElementById('eraseMessages').checked;
-  
+  devTestSetting = document.getElementById('devTestSetting').checked;
   
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings

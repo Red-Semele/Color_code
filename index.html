@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Color Social Deduction Game</title>
+<title>Color_code (social deduction)</title>
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -16,7 +16,7 @@
 <body>
 <div id="container">
     <div id="startScreen">
-        <h1>Welcome to Color Social Deduction Game</h1>
+        <h1>Welcome to Color_code</h1>
         <p>Please enter the number of players:</p>
         <input type="number" id="numPlayers" min="3" max="10">
         <button onclick="beginGame()">Test begin Game</button>
@@ -38,13 +38,16 @@
                     <option value="shared">Shared increase of cost and limit</option>
                     <option value="separate">Seperate increase of cost and limit</option>
                 </select>
+        </label><br>
+                
 
-        <label for="eraseMessages">
-        <input type="checkbox" id="eraseMessages"> Erase messages
+        <label for="devTestSetting">
+        <input type="checkbox" id="devTestSetting"> Enable devTesting things
         </label><br>
 
         <label for="revCost">initial revive cost:</label>
-        <input type="range" id="slider" min="1" max="10" step="1">
+        <input type="range" id="revCost" min="1" max="10" step="1">
+        <span id="revCostValue" class="slider-value"></span><br>
 
         <label for="revCostIncreaseRule">How do you want to increase the revival cost?:</label>
         <select id="revCostIncreaseRule">
@@ -53,8 +56,9 @@
             <option value="expoIncrease">Cost exponentiation</option>
         </select>
 
-        <label for="revCostIncrease">initial revive cost:</label>
-        <input type="range" id="slider" min="1" max="10" step="0.25">
+        <label for="revCostIncrease">Revive cost increase:</label>
+        <input type="range" id="revCostIncrease" min="1" max="10" step="0.25">
+        <span id="revCostIncreaseValue" class="slider-value"></span>
 
         <button onclick="saveSettings()">Save Settings</button>
     </div>
@@ -176,5 +180,34 @@
     </div>
 </div>
 <script src="main.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Get the sliders
+        const revCostSlider = document.getElementById("revCost");
+        console.log(revCostSlider)
+        const revCostIncreaseSlider = document.getElementById("revCostIncrease");
+        console.log(revCostIncreaseSlider)
+
+        // Get the elements to display slider values
+        const revCostValue = document.getElementById("revCostValue");
+        console.log(revCostValue)
+        const revCostIncreaseValue = document.getElementById("revCostIncreaseValue");
+        console.log(revCostIncreaseValue)
+
+        // Display initial values
+        console.log(revCostSlider.value)
+        revCostValue.textContent = revCostSlider.value;
+        revCostIncreaseValue.textContent = revCostIncreaseSlider.value;
+
+        // Update slider values when sliders are moved
+        revCostSlider.addEventListener("input", function() {
+            revCostValue.textContent = this.value;
+        });
+
+        revCostIncreaseSlider.addEventListener("input", function() {
+            revCostIncreaseValue.textContent = this.value;
+        });
+    });
+</script>
 </body>
 </html>

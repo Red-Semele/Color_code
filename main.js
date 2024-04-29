@@ -22,6 +22,7 @@ let messagesByRound = [];
 let spyMessagesForNextRound = [];
 let revivePointCost = {};
 let revivePointCostIncreaseMultiplier = 1;
+let fadedColorRank = false;
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -53,7 +54,7 @@ function startGame() {
   }
   
   // Assign random colors to players
-  const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'magenta', 'cyan', 'black', 'white', 'teal'];
+  const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'magenta', 'cyan', 'black', 'maroon', 'teal'];
   playerColors = [];
   console.log(playerColors)
   console.log("playernames:")
@@ -776,14 +777,17 @@ function endGame() {
     const { name, color, points } = player;
     const playerInfoDiv = document.createElement('div');
     let playerRank = rank; // Store the current rank before adjustment
-
-    if (fadedColors.hasOwnProperty(color) && points === prevPoints) {
-      rank--; // Decrement the rank for faded colors with the same points
+    console.log(color)
+    if (fadedColors.hasOwnProperty(color) && points === prevPoints && fadedColorRank === false ) {
+      console.log("fadedcolor has same amount of points.")
+      playerRank++; 
       if (fadedColors.hasOwnProperty(color)) {
-        if (rank === 1) { // Add "Faded colors:" text before the first faded player
+        console.log("fadedcolor detected.")
+        if (fadedColorRank === false) { 
           const fadedText = document.createElement('div');
           fadedText.textContent = 'Faded colors:';
           endGameDiv.appendChild(fadedText);
+          fadedColorRank = true
         }
         rank++; // Increment the rank for other faded players
         prevPoints = points; // Update previous points for faded players
@@ -792,7 +796,7 @@ function endGame() {
 
     // Adjust rank based on points change
     if (points !== prevPoints) {
-      rank = index + 1; // Update rank if points change
+      playerRank = index + 1; // Update rank if points change
     }
 
     playerInfoDiv.textContent = `Rank: ${playerRank}, Color: ${color}, Name: ${name}, Points: ${points}`;
@@ -875,6 +879,7 @@ function displayMessagesByRound(round) {
       console.log(currentPlayerColor);
       if (msg.receivingColor === currentPlayerColor) {
         const messageDiv = document.createElement('div');
+        messageDiv.style.color = msg.playerColor; // Set color of the sender
         messageDiv.textContent = `${msg.playerColor}: ${msg.message}`;
         messagesDiv.appendChild(messageDiv);
       }

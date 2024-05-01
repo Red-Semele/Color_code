@@ -23,6 +23,10 @@ let spyMessagesForNextRound = [];
 let revivePointCost = {};
 let revivePointCostIncreaseMultiplier = 1;
 let fadedColorRank = false;
+let fadedColorCount = 0;
+let actionLimit = 1;
+let playerTurnCounts = {}//Object to track how many turns each player has had.
+let roundVoted = roundCount
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -70,7 +74,10 @@ function startGame() {
   playerNames.forEach(name => {
     playerPoints[name] = 0; // Start each player with 0 points
     revivePointCost[name] = document.getElementById("revCost").value;
+    playerTurnCounts[name] = 0;
   });
+  console.log(playerTurnCounts)
+  console.log("Check of playerturncounts")
   console.log(document.getElementById("revCost").value)
   
   const fakeColorSelect = document.getElementById('fake-color');
@@ -123,6 +130,7 @@ function startGame() {
   console.log(playerColors)
   console.log(currentPlayerColor)
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
+  beginTurn()
   
 
   // Additional game initialization logic can go here
@@ -219,6 +227,8 @@ function endTurn() {
 
 
 function beginTurn() {
+  playerTurnCounts[currentPlayerName] += 1;
+  console.log(playerTurnCounts)
   turnCount++; // Increase the turn count at the beginning of each turn
   if (turnCount % numPlayers === 0) {
     roundCount++; // Increase roundCounter when turnCount is divisible by numPlayers
@@ -229,6 +239,7 @@ function beginTurn() {
   if (devTestSetting === true) {
     displayAssignedColors(playerColors);
   }
+  
   displayVoteCounts();
   checkVotes(currentPlayerColor);
   //displayMessages()
@@ -261,7 +272,7 @@ function beginTurn() {
 
 
     function sendMessage() {
-      if (actionCount === 1) {
+      if (actionCount === actionLimit) {
         alert('You have already taken an action this turn.');
         return;
       }
@@ -294,7 +305,7 @@ function beginTurn() {
     }
 
     function spyColor() {
-      if (actionCount === 1) {
+      if (actionCount === actionLimit) {
         alert('You have already taken an action this turn.');
         return;
       }
@@ -348,7 +359,7 @@ function beginTurn() {
     
   
   function fakeMessage() {
-    if (actionCount === 1) {
+    if (actionCount === actionLimit) {
       alert('You have already taken an action this turn.');
       return;
     }
@@ -402,11 +413,16 @@ function beginTurn() {
 }
 
 function colorVote() {
+  if (roundCount < 1) {
+    alert('Please refrain from voting until round 2 starts.')
+    return;
+  }
   const voteColorSelect = document.getElementById('vote-color');
   const voteNameSelect = document.getElementById('vote-name');
   const voteColor = document.getElementById('vote-color').value;
   const voteName = document.getElementById('vote-name').value;
   voter = currentPlayerColor
+  roundVoted = roundCount
   if (voteColor.trim() === '' || voteName.trim() === '') {
     alert('There are no vote options left. Revoke a vote if you want to change it.');
     return; // Exit the function early
@@ -414,15 +430,15 @@ function colorVote() {
   
 
   // Remove the selected color and name from the dropdown menus
-  removeOptionFromSelect(voteColorSelect, voteColor, voter);
-  removeOptionFromSelect(voteNameSelect, voteName, voter);
+  removeOptionFromSelect(voteColorSelect, voteColor, voter, roundVoted);
+  removeOptionFromSelect(voteNameSelect, voteName, voter, roundVoted);
   //TODO: For some reason the code doesn't trigger.
   if (voteColor.trim() === '' || voteName.trim() === '') {
     alert('Please select both a color and a name to vote.'); //TODO: Use this code to make the option dissapear.
     return; // Exit the function early
   }
 
-  colorVotes.push({ voteColor, voteName, voter });
+  colorVotes.push({ voteColor, voteName, voter, roundVoted });
   console.log(colorVotes); // Optionally, you can log the array to verify it's working
   displayColorVotes();
 }
@@ -441,7 +457,7 @@ function removeOptionFromSelect(selectElement, value, voter) {
 function displayColorVotes() {
 
   
-  
+  //TODO: The vote cache only gets properly cleared each turn, when the player comes back for some reason all options are put back. (Try to fix that)
   votesDiv.innerHTML = ''; // Clear previous messages before appending new ones
   //messagesDiv.innerHTML = '';
   colorVotes.forEach((clrVt, index) => {
@@ -513,32 +529,60 @@ function displayVoteCounts() {
 
 function checkVotes() {
   currentPlayerName = playerNames[currentPlayerIndex];
-  const correctVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === currentPlayerName);
+
+  // Array to store unique votes
+  const uniqueColorVotes = [];
+
+  // Iterate through colorVotes array
+  colorVotes.forEach(vote => {
+    const existingIndex = uniqueColorVotes.findIndex(uniqueVote =>
+      uniqueVote.voteColor === vote.voteColor &&
+      uniqueVote.voteName === vote.voteName &&
+      uniqueVote.roundVoted < vote.roundVoted
+    );
+
+    // If no existing vote or current vote has higher roundVoted, add it to uniqueColorVotes
+    if (existingIndex === -1) {
+      uniqueColorVotes.push(vote);
+    } else {
+      // Replace existing vote with the current one
+      uniqueColorVotes[existingIndex] = vote;
+    }
+  });
+  console.log("Uniquevotes")
+  console.log(uniqueColorVotes)
+
+  const correctVotes = uniqueColorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === currentPlayerName && vote.roundVoted < roundCount);
   const numCorrectVotes = correctVotes.length;
   // Filter votes where color is correct but name is wrong
-  const wrongNameVotes = colorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName !== currentPlayerName);
+  const wrongNameVotes = uniqueColorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName !== currentPlayerName && vote.roundVoted < roundCount);
   console.log(wrongNameVotes)
   const numWrongNameVotes = wrongNameVotes.length
   console.log("numWrongNameVotes")
   console.log(numWrongNameVotes)
 
   // Filter votes where name is correct but color is wrong
-  const wrongColorVotes = colorVotes.filter(vote => vote.voteColor !== currentPlayerColor && vote.voteName === currentPlayerName);
+  const wrongColorVotes = uniqueColorVotes.filter(vote => vote.voteColor !== currentPlayerColor && vote.voteName === currentPlayerName && vote.roundVoted < roundCount);
   const numWrongColorVotes = wrongColorVotes.length
   console.log("numWrongColorVotes")
   console.log(numWrongColorVotes)
   // Combine both types of wrong votes
   const numWrongVotesTotal = (numWrongNameVotes + numWrongColorVotes)
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
-  alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
-  awardPoints(currentPlayerName, (1*numWrongVotesTotal))
-  deductPoints(currentPlayerName, (2*numCorrectVotes))
+  if (playerTurnCounts[currentPlayerName] > 0)
+    alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
+    awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+    deductPoints(currentPlayerName, (2*numCorrectVotes))
   
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (!currentPlayerIsFaded) {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
-    if (numCorrectVotes > ((numPlayers - 1) / 2)) {
+    if (numCorrectVotes > ((numPlayers - (1 + fadedColorCount) / 2))) { 
+      //TODO: For some reason the faded color math doesn't seem to work anymore. Check this out
+      console.log((numPlayers - (1 + fadedColorCount) / 2)) //TODO: Check if theis part of the gamemath seems to work, I added the fadedcolorcount to what should be subtracted.
+      //TODO: do numplayers - (1 + amount of fadedplayers)
       alert(`You got found out. You are now a faded color.`);
+      fadedColorCount += 1
       fadedColors[currentPlayerColor] = true;
       if ((Object.keys(fadedColors).length - 1) !== 0) {
         //The above line is to make sure you don't divide by zero
@@ -547,7 +591,7 @@ function checkVotes() {
         console.log( Object.keys(fadedColors).length)
         playerColors.forEach(playerColor => {
           if (fadedColors.hasOwnProperty(playerColor)){
-          awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And then replace playercolor here by that.
+            awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And then replace playercolor here by that.
           }
           console.log(fadedColorStolenPoints) //TODO: For some reason there is an error right next to it
           //TODO: Test out this experimental code, check out to see if this works or not. Alos, I want it to not trigger for each playerName but for each playername in fadedcolor
@@ -558,7 +602,7 @@ function checkVotes() {
       
     }
   } else {
-    alert(`the majority still thinks it was you.`)
+    alert(`The majority still thinks it was you.`)
     awardPoints(currentPlayerName, (1)) //TODO: Make a setting for how much points each faded color gains per turn.
   }
   displayPlayerPoints()
@@ -580,7 +624,7 @@ function specialMove() {
 
 function reviveFadedColor() {
   //TODO: Check if the revcostincreases properly function.
-  console.log(revivePointCost[currentPlayerName] + " Revpointcost")
+  console.log(revivePointCost[currentPlayerName] + " revpointcost")
   const revRules = document.getElementById('reviveRulesApplication').value;
   const revCostIncRule = document.getElementById('revCostIncreaseRule').value;
   revivePointCostIncreaseMultiplier = document.getElementById('revCostIncrease').value;
@@ -592,6 +636,7 @@ function reviveFadedColor() {
     document.getElementById('sendAs').style.display = 'none';
     //TODO: Give an in game prompt that is not a pop-up to tell the player that they got revived
     alert("You just revived.");
+    fadedColorCount -= 1
     if (revCostIncRule === "noIncrease") {
 
     } else {
@@ -705,28 +750,47 @@ function updateColorOptions() {
 }
 
 function updateVoteOptions() {
+  //TODO: This is the cause of why the game gives too many vote options. Make it so that it doesn't update the things the player already voted.
   const voteColorSelect = document.getElementById('vote-color');
   const voteNameSelect = document.getElementById('vote-name');
   
   // Clear the current options
   voteColorSelect.innerHTML = '';
   voteNameSelect.innerHTML = '';
-
-  // Repopulate the options for the new current player
-  playerColors.forEach((color, index) => {
+  console.log("playerturncount")
+  console.log(playerTurnCounts[currentPlayerName])
+  console.log("playerturncount2")
+  console.log(playerTurnCounts)
+  console.log(currentPlayerName)
+  console.log(currentPlayerName)
+  //if (playerTurnCounts[currentPlayerName] === 0) {
+  //TODO: The code to re-add specific buttons that haven't been voted on yet or have been revoked needs to be re-implemented. (Maybe save them in an object?)
     
-    const optionColor = document.createElement('option');
-    optionColor.value = color;
-    //optionColor.textContent = color;
-    optionColor.textContent = color.charAt(0).toUpperCase() + color.slice(1);
-    voteColorSelect.appendChild(optionColor);
 
-    const optionName = document.createElement('option');
-    optionName.value = playerNamesVoteOption[index]; 
-    optionName.textContent = playerNamesVoteOption[index];
-    voteNameSelect.appendChild(optionName);
+  // Get the colors and names previously voted on by the current player
+  const colorsVotedByPlayer = colorVotes.filter(vote => vote.voter === currentPlayerColor).map(vote => vote.voteColor);
+  const namesVotedByPlayer = colorVotes.filter(vote => vote.voter === currentPlayerColor).map(vote => vote.voteName);
+  // Repopulate the options for the new current player
+  // Repopulate the options for the new current player
+  playerColors.forEach(color => {
+    if (!colorsVotedByPlayer.includes(color)) {
+      const optionColor = document.createElement('option');
+      optionColor.value = color;
+      optionColor.textContent = color.charAt(0).toUpperCase() + color.slice(1);
+      voteColorSelect.appendChild(optionColor);
+    }
   });
-}
+
+  playerNamesVoteOption.forEach(name => {
+    if (!namesVotedByPlayer.includes(name)) {
+      const optionName = document.createElement('option');
+      optionName.value = name;
+      optionName.textContent = name;
+      voteNameSelect.appendChild(optionName);
+    }
+  });
+  }
+//}
 function awardPoints(playerName, points) {
   console.log("Attempted to give points to:")
   console.log(playerName)
@@ -789,7 +853,6 @@ function endGame() {
           endGameDiv.appendChild(fadedText);
           fadedColorRank = true
         }
-        rank++; // Increment the rank for other faded players
         prevPoints = points; // Update previous points for faded players
       }
     }
@@ -812,9 +875,9 @@ function actionButtons() {
   document.getElementById('messageBtnDiv').style.display = 'inline';
   document.getElementById('spyBtnDiv').style.display = 'inline';
   //TODO make this show the variety of buttons you can press, make it be divided in fake message, spy, send message.
-  if (actionCount === 1) {
+  if (actionCount === actionLimit) {
     console.log(actionCount)
-    alert('You have already taken an action this turn.'); //TODO: Actually make this clear the gamescreen there is a bug right now where the system basically tells you this but still lets you take other actions, this could be fixed by just making those options dissapear. A bit unintuitive maybe but good enough for now.
+    alert('You have already taken all your actions.');
     return;
   }
   actionCount += 1

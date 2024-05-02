@@ -4,7 +4,7 @@ let playerColors = [];
 let playerNames = [];
 let playerNamesVoteOption = [];
 let colorVotes = [];
-const messages = [];
+let messages = [];
 let voter = currentPlayerColor
 let votes = [];
 let numPlayers = 0
@@ -26,7 +26,8 @@ let fadedColorRank = false;
 let fadedColorCount = 0;
 let actionLimit = 1;
 let playerTurnCounts = {}//Object to track how many turns each player has had.
-let roundVoted = roundCount
+let roundVoted = roundCount;
+let fadedColorMessages = [];
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -261,6 +262,7 @@ function beginTurn() {
   updateVoteOptions();
   displayMessages();
   displayColorVotes();
+  displayFadedColorChat ();
   updateColorOptions();
   processSpyRequests()
   currentPlayerName = playerNames[currentPlayerIndex];
@@ -569,7 +571,7 @@ function checkVotes() {
   // Combine both types of wrong votes
   const numWrongVotesTotal = (numWrongNameVotes + numWrongColorVotes)
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
-  if (playerTurnCounts[currentPlayerName] > 0)
+  if (playerTurnCounts[currentPlayerName] > 1)
     alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
     awardPoints(currentPlayerName, (1*numWrongVotesTotal))
     deductPoints(currentPlayerName, (2*numCorrectVotes))
@@ -577,7 +579,11 @@ function checkVotes() {
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (!currentPlayerIsFaded) {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
-    if (numCorrectVotes > ((numPlayers - (1 + fadedColorCount) / 2))) { 
+    console.log("numCorrectVotes")
+    console.log(numCorrectVotes)
+    console.log("Vote requirement")
+    console.log((numPlayers - (1 + fadedColorCount) / 2))
+    if (numCorrectVotes > (numPlayers - (1 + fadedColorCount) / 2)) { 
       //TODO: For some reason the faded color math doesn't seem to work anymore. Check this out
       console.log((numPlayers - (1 + fadedColorCount) / 2)) //TODO: Check if theis part of the gamemath seems to work, I added the fadedcolorcount to what should be subtracted.
       //TODO: do numplayers - (1 + amount of fadedplayers)
@@ -816,7 +822,8 @@ function displayPlayerPoints() {
     if (!isNaN(points)) {
       if (name === currentPlayerName) {
         const playerPointsDiv = document.createElement('div');
-        playerPointsDiv.textContent = `${name}: ${points}`;
+        playerPointsDiv.textContent = `Your name: ${name}\nYour color: ${currentPlayerColor}\nYour points: ${points}`;
+        playerPointsDiv.style.display = "block";
         pointsDiv.appendChild(playerPointsDiv);
       }
     }
@@ -966,4 +973,30 @@ function saveSettings() {
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings
   console.log("eraseMessages:", eraseMessages);
+}
+
+function fadedColorChat () {
+  console.log(playerColor)
+  const fadedColorMessage = document.getElementById('fadedColorMessage').value;
+  const roundSent = roundCount
+  fadedColorMessages.push({ playerColor, fadedColorMessage, roundSent });
+    console.log("Fadedcolormessages:" + fadedColorMessages);
+    displayFadedColorChat();
+    actionButtons();
+    document.getElementById('fadedColormessage').value = "";
+}
+
+function displayFadedColorChat () {
+  currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
+  if (currentPlayerIsFaded) {
+    //TODO: Filter based on roundsent. Only show the messages from exactly roundsent = roundcount - 1 or roundsent < roundcount based on wheter or not the game was set to remove messages or not.
+    const chatContainer = document.getElementById('fadedColorChatContainer');
+    chatContainer.innerHTML = ""; // Clear previous messages
+    fadedColorMessages.forEach(message => {
+      const messageElement = document.createElement('div');
+      messageElement.textContent = `${message.playerColor}: ${message.fadedColorMessage} (Round ${message.roundSent})`;
+      chatContainer.appendChild(messageElement);
+    });
+  }
+    
 }

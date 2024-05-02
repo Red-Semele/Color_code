@@ -46,8 +46,6 @@ function startGame() {
   roundLimit = parseInt(prompt("Enter the round limit:"));
   document.getElementById('playerNames').style.display = 'inline';
   const nameInputs = document.querySelectorAll('#nameInputs input');
-  console.log("nameInputs:")
-  console.log(nameInputs)
   for (const input of nameInputs) {
     if (input.value.trim() === '') {
       alert('Please enter names for all players.');
@@ -61,9 +59,6 @@ function startGame() {
   // Assign random colors to players
   const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'magenta', 'cyan', 'black', 'maroon', 'teal'];
   playerColors = [];
-  console.log(playerColors)
-  console.log("playernames:")
-  console.log(playerNames)
   for (let i = 0; i < numPlayers; i++) {
       const randomIndex = Math.floor(Math.random() * colors.length);
       playerColors.push(colors[randomIndex]);
@@ -128,8 +123,6 @@ function startGame() {
   currentPlayerIndex = 0;
   // Set the current player's color to the first player's color
   currentPlayerColor = playerColors[0];
-  console.log(playerColors)
-  console.log(currentPlayerColor)
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   beginTurn()
   
@@ -188,9 +181,6 @@ function beginGame() {
   }
   displayColorVotes()
   const fadedColor = playerColors[currentPlayerIndex - 1]; // Assuming currentPlayerIndex was already incremented
-  console.log("fadedColor")
-  console.log(fadedColor)
-  console.log(fadedColors)
   if (fadedColors.hasOwnProperty(fadedColor)) {
     fadedColors[fadedColor]++; // Increment energy points for the faded color
   }
@@ -203,9 +193,7 @@ function endTurn() {
   document.getElementById('endTurnBtn').style.display = 'none';
   document.getElementById('playerOptions').style.display = 'none';
   
-  console.log(currentPlayerIndex)
   currentPlayerIndex++;
-  console.log("Player " + currentPlayerIndex)
   const numPlayers = parseInt(document.getElementById('numPlayers').value);
   if (currentPlayerIndex >= numPlayers) {
       currentPlayerIndex = 0; // Reset to the first player if all players have finished their turns
@@ -222,8 +210,6 @@ function endTurn() {
     // You can add further logic here to display the final scores or perform any other end-game actions.
   }
   currentPlayerColor = playerColors[currentPlayerIndex];
-  console.log("Current player color: " + currentPlayerColor)
-  console.log("Previous player color: " + playerColors[currentPlayerIndex-1]);
 }
 
 
@@ -299,7 +285,8 @@ function beginTurn() {
       console.log(playerColor)
       const message = document.getElementById('message').value;
       const roundSent = roundCount
-        messages.push({ playerColor, message, receivingColor, roundSent });
+      const faked = false
+        messages.push({ playerColor, message, receivingColor, roundSent, faked });
         console.log("Player color after assignment:", playerColor);
         displayMessages();
         actionButtons();
@@ -319,8 +306,6 @@ function beginTurn() {
       const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === roundCount);
       // Store the spy request for the next round
       spyMessagesForNextRound.push({ spyColor, spiedColor, spyMessages });
-      console.log("Spy")
-      console.log (spyMessagesForNextRound)
 
     // Prepare the message for display
     //let messageText = `Messages for ${spyColor}:\n`;
@@ -346,6 +331,14 @@ function beginTurn() {
     
       // Filter messages where either the sender or the receiver matches the spy color
       const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === (roundCount - 1));
+      console.log(msg.faked)
+      if (msg.faked === true) {
+        console.log("Faked is true")
+        //TODO: Test out if this triggers or not.
+        //The plan is to make a player be able to detect wheter or not a message someone else sent to someone else is faked or not.
+        alert('One of these messages are faked.')
+        
+      }
       console.log("spyMessages")
       console.log(spyMessages)
     
@@ -373,7 +366,8 @@ function beginTurn() {
       //}
       const message = document.getElementById('fake-message').value;
       const roundSent = roundCount
-      messages.push({ playerColor, message, receivingColor, roundSent });
+      const faked = true
+      messages.push({ playerColor, message, receivingColor, roundSent, faked });
       displayMessages();
       actionButtons();
   }
@@ -553,6 +547,7 @@ function checkVotes() {
   });
   console.log("Uniquevotes")
   console.log(uniqueColorVotes)
+  console.log(colorVotes)
 
   const correctVotes = uniqueColorVotes.filter(vote => vote.voteColor === currentPlayerColor && vote.voteName === currentPlayerName && vote.roundVoted < roundCount);
   const numCorrectVotes = correctVotes.length;
@@ -571,10 +566,13 @@ function checkVotes() {
   // Combine both types of wrong votes
   const numWrongVotesTotal = (numWrongNameVotes + numWrongColorVotes)
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
-  if (playerTurnCounts[currentPlayerName] > 1)
+  if (playerTurnCounts[currentPlayerName] > 1) {
     alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
     awardPoints(currentPlayerName, (1*numWrongVotesTotal))
     deductPoints(currentPlayerName, (2*numCorrectVotes))
+  } else {
+    return;
+  }
   
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (!currentPlayerIsFaded) {
@@ -582,8 +580,8 @@ function checkVotes() {
     console.log("numCorrectVotes")
     console.log(numCorrectVotes)
     console.log("Vote requirement")
-    console.log((numPlayers - (1 + fadedColorCount) / 2))
-    if (numCorrectVotes > (numPlayers - (1 + fadedColorCount) / 2)) { 
+    console.log(((numPlayers - (1 + fadedColorCount)) / 2))
+    if (numCorrectVotes > ((numPlayers - (1 + fadedColorCount)) / 2)) { 
       //TODO: For some reason the faded color math doesn't seem to work anymore. Check this out
       console.log((numPlayers - (1 + fadedColorCount) / 2)) //TODO: Check if theis part of the gamemath seems to work, I added the fadedcolorcount to what should be subtracted.
       //TODO: do numplayers - (1 + amount of fadedplayers)
@@ -763,12 +761,6 @@ function updateVoteOptions() {
   // Clear the current options
   voteColorSelect.innerHTML = '';
   voteNameSelect.innerHTML = '';
-  console.log("playerturncount")
-  console.log(playerTurnCounts[currentPlayerName])
-  console.log("playerturncount2")
-  console.log(playerTurnCounts)
-  console.log(currentPlayerName)
-  console.log(currentPlayerName)
   //if (playerTurnCounts[currentPlayerName] === 0) {
   //TODO: The code to re-add specific buttons that haven't been voted on yet or have been revoked needs to be re-implemented. (Maybe save them in an object?)
     
@@ -983,19 +975,19 @@ function fadedColorChat () {
     console.log("Fadedcolormessages:" + fadedColorMessages);
     displayFadedColorChat();
     actionButtons();
-    document.getElementById('fadedColormessage').value = "";
+    document.getElementById('fadedColorMessage').value = "";
 }
 
 function displayFadedColorChat () {
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
   if (currentPlayerIsFaded) {
     //TODO: Filter based on roundsent. Only show the messages from exactly roundsent = roundcount - 1 or roundsent < roundcount based on wheter or not the game was set to remove messages or not.
-    const chatContainer = document.getElementById('fadedColorChatContainer');
-    chatContainer.innerHTML = ""; // Clear previous messages
+    const fadedMessages = document.getElementById('fadedMessages'); //TODO: Change the name of this container and make it a real thing.
+    fadedMessages.innerHTML = ""; // Clear previous messages
     fadedColorMessages.forEach(message => {
       const messageElement = document.createElement('div');
       messageElement.textContent = `${message.playerColor}: ${message.fadedColorMessage} (Round ${message.roundSent})`;
-      chatContainer.appendChild(messageElement);
+      fadedMessages.appendChild(messageElement);
     });
   }
     

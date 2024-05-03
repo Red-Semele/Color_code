@@ -7,7 +7,7 @@ let colorVotes = [];
 let messages = [];
 let voter = currentPlayerColor
 let votes = [];
-let numPlayers = 0
+let numPlayers = 0;
 let currentPlayerIsFaded = [];
 let fadedColors = {}; // Object to track faded colors and their energy points
 let playerColor = currentPlayerColor;
@@ -28,6 +28,7 @@ let actionLimit = 1;
 let playerTurnCounts = {}//Object to track how many turns each player has had.
 let roundVoted = roundCount;
 let fadedColorMessages = [];
+let spyMessages = [];
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -188,13 +189,16 @@ function beginGame() {
 
 function endTurn() {
   actionCount = 0
+  if (turnCount % numPlayers === 0) {
+    roundCount++; // Increase roundCounter when turnCount is divisible by numPlayers
+  } //POT ERROR: this used to be at the start of beginturn
   console.log(messages)
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   document.getElementById('endTurnBtn').style.display = 'none';
   document.getElementById('playerOptions').style.display = 'none';
   
   currentPlayerIndex++;
-  const numPlayers = parseInt(document.getElementById('numPlayers').value);
+  numPlayers = parseInt(document.getElementById('numPlayers').value);
   if (currentPlayerIndex >= numPlayers) {
       currentPlayerIndex = 0; // Reset to the first player if all players have finished their turns
   }
@@ -217,9 +221,7 @@ function beginTurn() {
   playerTurnCounts[currentPlayerName] += 1;
   console.log(playerTurnCounts)
   turnCount++; // Increase the turn count at the beginning of each turn
-  if (turnCount % numPlayers === 0) {
-    roundCount++; // Increase roundCounter when turnCount is divisible by numPlayers
-  }
+  
 
   console.log(messages)
   votesDiv.innerHTML = '';
@@ -293,64 +295,79 @@ function beginTurn() {
         document.getElementById('message').value = "";
     }
 
-    function spyColor() {
-      if (actionCount === actionLimit) {
-        alert('You have already taken an action this turn.');
-        return;
-      }
-      const spiedColor = document.getElementById('spy').value;
-      const spyColor = currentPlayerColor
-       
+  function spyColor() {
+    if (actionCount === actionLimit) {
+      alert('You have already taken an action this turn.');
+      return;
+    }
+    const spiedColor = document.getElementById('spy').value;
+    const spyColor = currentPlayerColor
+    if ( spiedColor === spyColor) {
+      alert('You cannot spy on yourself.')
+      return;
+    }
+      
 
-      // Filter messages where either the sender or the receiver matches the spy color
-      const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === roundCount);
-      // Store the spy request for the next round
-      spyMessagesForNextRound.push({ spyColor, spiedColor, spyMessages });
-
-    // Prepare the message for display
-    //let messageText = `Messages for ${spyColor}:\n`;
-    //spyMessages.forEach(msg => {
-      //messageText += `${msg.playerColor}: ${msg.message}\n`;
-    //});
-
+    // Filter messages where either the sender or the receiver matches the spy color
+    console.log("Messages")
+    console.log(messages)
+    spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === roundCount);
+    console.log("spyMessages")
+    console.log(spyMessages)
+    // Store the spy request for the next round
+    spyMessagesForNextRound.push({ spyColor, spiedColor, spyMessages });
+    
+    console.log(spyMessagesForNextRound)
     // Display the messages
     actionButtons();
-    }
+  }
 
-    function processSpyRequests() {
-      console.log("pushed spy message")
-      console.log(spyMessagesForNextRound)
-      if (spyMessagesForNextRound.length === 0) return;
-      console.log("there are spy requests")
-      console.log(spyMessagesForNextRound[0].spyColor)
-      console.log(currentPlayerColor)
-      if (spyMessagesForNextRound[0].spyColor !== currentPlayerColor) return; //TODO: This should make sure that if the spyColor is not the one who is currently playing they see the requests.
-      console.log("The current player is the spy")
-      const spyRequest = spyMessagesForNextRound.shift(); // Get the first spy request
-      const spiedColor = spyRequest.spiedColor;
+  function processSpyRequests() {
+    console.log("pushed spy message")
+    console.log(spyMessagesForNextRound)
+    if (spyMessagesForNextRound.length === 0) return;
+    console.log("there are spy requests")
+    console.log(spyMessagesForNextRound[0].spyColor)
+    console.log(currentPlayerColor)
+    if (spyMessagesForNextRound[0].spyColor !== currentPlayerColor) return; //TODO: This should make sure that if the spyColor is not the one who is currently playing they see the requests.
+    console.log("The current player is the spy")
+    const spyRequest = spyMessagesForNextRound.shift(); // Get the first spy request
+    const spiedColor = spyRequest.spiedColor;
+    const messagesReceivedBySpy = messages.filter((msg) => msg.receivingColor === spiedColor && msg.roundSent === (roundCount - 1));
+    console.log("recieved" + messagesReceivedBySpy)
     
-      // Filter messages where either the sender or the receiver matches the spy color
-      const spyMessages = messages.filter(msg => (msg.playerColor === spiedColor || msg.receivingColor === spiedColor) && msg.roundSent === (roundCount - 1));
-      console.log(msg.faked)
-      if (msg.faked === true) {
-        console.log("Faked is true")
-        //TODO: Test out if this triggers or not.
-        //The plan is to make a player be able to detect wheter or not a message someone else sent to someone else is faked or not.
-        alert('One of these messages are faked.')
-        
-      }
-      console.log("spyMessages")
-      console.log(spyMessages)
-    
-      // Prepare the message for display
-      let messageText = `Messages for ${spiedColor}:\n`;
-      spyMessages.forEach(msg => {
-        messageText += `${msg.playerColor}: ${msg.message}\n`;
-      });
-    
-      // Display the messages
-      alert(messageText);
+    // Filter messages sent by the spy color
+    const messagesSentBySpy = messages.filter((msg) => msg.playerColor === spiedColor && msg.roundSent === (roundCount - 1));
+    console.log("sent" + messagesSentBySpy)
+    console.log(spyMessages)
+    const indexFakeCheck = messages.findIndex(msg => msg.faked === true);
+    if (indexFakeCheck !== -1 && messages[indexFakeCheck].roundSent === roundCount - 1) {
+      console.log("fake message spotted");
+      console.log(fakedMessageSpotted);
+      alert('One of these messages is faked.');
     }
+    
+  
+    // Prepare the message for display
+    let messageText = `Messages for ${spiedColor}:\n`;
+    console.log("recieved spy messages")
+    console.log(messagesReceivedBySpy)
+    messagesReceivedBySpy.forEach((msg) => {
+      messageText += `${msg.playerColor}: ${msg.message} Faked = ${msg.faked}\n`;
+    });
+
+    // Add messages sent by the spy color to the display
+    messageText += `\nMessages sent by ${spiedColor}:\n`;
+    console.log("sent spy messages")
+    console.log(messagesSentBySpy)
+    messagesSentBySpy.forEach((msg) => {
+      messageText += `${msg.playerColor}: ${msg.message} Faked = ${msg.faked}\n`;
+    });
+  
+    // Display the messages
+    alert(messageText);
+    
+  }
     
   
   function fakeMessage() {
@@ -360,6 +377,10 @@ function beginTurn() {
     }
       const playerColor = document.getElementById('fake-color').value;
       const receivingColor = document.getElementById('colorSendFake').value;
+      if ( playerColor === receivingColor) {
+        alert('You cannot make one color both the sender and reciever.')
+        return;
+      }
       //if (playerColor === fakeColor) {
           //alert("You cannot fake your own messages!");
          // return;
@@ -418,6 +439,14 @@ function colorVote() {
   const voteColor = document.getElementById('vote-color').value;
   const voteName = document.getElementById('vote-name').value;
   voter = currentPlayerColor
+  console.log("colorVoteCheck")
+  console.log(currentPlayerColor)
+  console.log(currentPlayerName)
+  if (voteColor === currentPlayerColor || voteName === currentPlayerName) {
+    //TODO: For some reason this doesn't properly trigger.
+    alert('You cannot vote on yourself. You cannot use your own name or color in a vote.')
+    return;
+  }
   roundVoted = roundCount
   if (voteColor.trim() === '' || voteName.trim() === '') {
     alert('There are no vote options left. Revoke a vote if you want to change it.');
@@ -567,7 +596,7 @@ function checkVotes() {
   const numWrongVotesTotal = (numWrongNameVotes + numWrongColorVotes)
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
   if (playerTurnCounts[currentPlayerName] > 1) {
-    alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you recieved ${numWrongVotesTotal} wrong votes.`);
+    alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you Received ${numWrongVotesTotal} wrong votes.`);
     awardPoints(currentPlayerName, (1*numWrongVotesTotal))
     deductPoints(currentPlayerName, (2*numCorrectVotes))
   } else {
@@ -986,7 +1015,8 @@ function displayFadedColorChat () {
     fadedMessages.innerHTML = ""; // Clear previous messages
     fadedColorMessages.forEach(message => {
       const messageElement = document.createElement('div');
-      messageElement.textContent = `${message.playerColor}: ${message.fadedColorMessage} (Round ${message.roundSent})`;
+      //TODO: Probably add a way to display wheter or not you sent a message yourself.
+      messageElement.textContent = `Faded Color: ${message.fadedColorMessage}`;
       fadedMessages.appendChild(messageElement);
     });
   }

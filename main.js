@@ -273,6 +273,7 @@ function beginTurn() {
  
       
       const sendAs = document.getElementById('sendAs').value;
+      
       if (currentPlayerIsFaded) {
         if (sendAs === 'faded') {
           playerColor = "Faded Color"
@@ -286,6 +287,10 @@ function beginTurn() {
       const receivingColor = document.getElementById('colorSend').value;
       console.log(playerColor)
       const message = document.getElementById('message').value;
+      if (message.trim() === '') {
+        alert('Please enter text to send a message.');
+        return; // Exit the function early
+      }
       const roundSent = roundCount
       const faked = false
         messages.push({ playerColor, message, receivingColor, roundSent, faked });
@@ -353,7 +358,7 @@ function beginTurn() {
     console.log("recieved spy messages")
     console.log(messagesReceivedBySpy)
     messagesReceivedBySpy.forEach((msg) => {
-      messageText += `${msg.playerColor}: ${msg.message} Faked = ${msg.faked}\n`;
+      messageText += `${msg.playerColor}: ${msg.message}\n`;
     });
 
     // Add messages sent by the spy color to the display
@@ -361,7 +366,7 @@ function beginTurn() {
     console.log("sent spy messages")
     console.log(messagesSentBySpy)
     messagesSentBySpy.forEach((msg) => {
-      messageText += `${msg.playerColor}: ${msg.message} Faked = ${msg.faked}\n`;
+      messageText += `${msg.playerColor}: ${msg.message}\n`;
     });
   
     // Display the messages
@@ -386,6 +391,10 @@ function beginTurn() {
          // return;
       //}
       const message = document.getElementById('fake-message').value;
+      if (message.trim() === '') {
+        alert('Please enter text to send a message.');
+        return; // Exit the function early
+      }
       const roundSent = roundCount
       const faked = true
       messages.push({ playerColor, message, receivingColor, roundSent, faked });
@@ -999,6 +1008,10 @@ function saveSettings() {
 function fadedColorChat () {
   console.log(playerColor)
   const fadedColorMessage = document.getElementById('fadedColorMessage').value;
+  if (fadedColorMessage.trim() === '') {
+    alert('Please enter text to send a message.');
+    return; // Exit the function early
+  }
   const roundSent = roundCount
   fadedColorMessages.push({ playerColor, fadedColorMessage, roundSent });
     console.log("Fadedcolormessages:" + fadedColorMessages);
@@ -1021,4 +1034,23 @@ function displayFadedColorChat () {
     });
   }
     
+}
+
+
+function showGuide() {
+  var guideDiv = document.getElementById('guideForNewPlayers');
+  //TODO: Display this text better, make it all start at the same point. (Cenetered but all starting from the same cenetered point)
+  var guideText = "<div style='text-align: center; width: 100%;'>" +
+                  "<div style='display: inline-block; text-align: left;'>" +
+                  "<br>Welcome to Color_code!<br>" +
+                  "This game is a sort of social deduction game. The goal in this game is to find out what color the other players are without them finding out what color you are.<br>" +
+                  "Every time someone combines the wrong name and color for a vote both that name and color gain extra points. So lying about who you are or pretending to be a fake color will give you extra points but might also benefit others. Try to keep a decent balance between truth and lies all the while trying to figure out what the others are doing.<br>" +
+                  "When enough players figure out the correct name assigned to a color that person becomes a faded-color. The players won't be notified if their vote was correct or not. A faded-color wants to make others faded as well so they can steal their points, they also can revive themselves if they have enough points. They passively gain points each round, this can be combatted by the regular players correctly voting on the player's true color and their name. If other players vote wrong, just like normal this assigns extra points to the faded-colors.<br>" +
+                  "The game ends after X amount of rounds. At the end your scoring will be calculated by the amount of points you have and whether or not you are a faded color (faded colors are always scored lower than regular ones)." +
+                  "</div></div>";
+  if (guideDiv.innerHTML.trim() === "") {
+    guideDiv.innerHTML = guideText; // Fill guideDiv if it's empty
+  } else {
+    guideDiv.innerHTML = ""; // Clear guideDiv if it's already filled
+  }
 }

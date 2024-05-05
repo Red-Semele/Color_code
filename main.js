@@ -125,6 +125,9 @@ function startGame() {
   // Set the current player's color to the first player's color
   currentPlayerColor = playerColors[0];
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
+  if (fadedColorStartEnabled === true) {
+    assignFadedColors(2); //TODO: Make this a changable value in the settings
+  }
   beginTurn()
   
 
@@ -196,6 +199,9 @@ function endTurn() {
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   document.getElementById('endTurnBtn').style.display = 'none';
   document.getElementById('playerOptions').style.display = 'none';
+  document.getElementById('fadedOptions').style.display = 'none';
+  document.getElementById('messageDisplay').style.display = 'none';
+  
   
   currentPlayerIndex++;
   numPlayers = parseInt(document.getElementById('numPlayers').value);
@@ -247,6 +253,7 @@ function beginTurn() {
   document.getElementById('beginTurnBtn').style.display = 'none';
   document.getElementById('endTurnBtn').style.display = 'inline';
   document.getElementById('playerOptions').style.display = 'inline';
+  document.getElementById('messageDisplay').style.display = 'inline';
   updateVoteOptions();
   displayMessages();
   displayColorVotes();
@@ -999,6 +1006,7 @@ function storeMessagesForRound() {
 function saveSettings() {
   eraseMessages = document.getElementById('eraseMessages').checked;
   devTestSetting = document.getElementById('devTestSetting').checked;
+  fadedColorStartEnabled = document.getElementById('fadedColorStart').checked;
   
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings
@@ -1053,4 +1061,28 @@ function showGuide() {
   } else {
     guideDiv.innerHTML = ""; // Clear guideDiv if it's already filled
   }
+}
+
+function assignFadedColors(numFadedColors) {
+  const players = Object.keys(playerPoints);
+  const shuffledPlayers = players.sort(() => Math.random() - 0.5); // Shuffle player order
+
+  // Assign faded colors to the first numFadedColors players after shuffling
+  const fadedColorsAssigned = shuffledPlayers.slice(0, numFadedColors);
+  fadedColorStolenPoints = playerPoints[currentPlayerName]/ ( Object.keys(fadedColors).length - 1)
+
+  fadedColorsAssigned.forEach(playerName => {
+    const playerColor = playerColors[playerNames.indexOf(playerName)];
+    fadedColors[playerColor] = true;
+    fadedColorCount++;
+    Object.keys(fadedColors).forEach(color => {
+      if (color !== playerColor) {
+        awardPoints(color, fadedColorStolenPoints);
+      }
+    });
+
+    deductPoints(playerName, playerPoints[playerName]); // Remove all points from the faded player
+  });
+
+  return fadedColorsAssigned;
 }

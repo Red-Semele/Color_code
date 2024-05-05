@@ -50,6 +50,9 @@
         <label for="devTestSetting">
         <input type="checkbox" id="devTestSetting"> Enable devTesting things
         </label><br>
+        <label for="fadedColorStart">
+            <input type="checkbox" id="fadedColorStart"> Start out with (currently 2, will be changeable) faded-colors
+            </label><br>
 
         <label for="revCost">initial revive cost:</label>
         <input type="range" id="revCost" min="1" max="10" step="1">
@@ -171,11 +174,12 @@
                 <h2>Color Votes</h2>
             </div>
             </div>
-            <p>Messages:</p>
-            <div id="messages"></div>
-            <p>Faded color messages:</p>
-            <div id="fadedMessages"></div>
-            <p>Points: (Make this update the player based on how many points they have gained.)</p> 
+            <div id="messageDisplay">
+                <p>Messages:</p>
+                <div id="messages"></div>
+                <p>Faded color messages:</p>
+                <div id="fadedMessages"></div>
+            </div>
             
         </div>
         <div id="fadedOptions">

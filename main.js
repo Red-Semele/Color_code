@@ -31,7 +31,11 @@ let fadedColorMessages = [];
 let spyMessages = [];
 let fadedColorStartEnabled = false;
 let fadedColorPassivePoints = 1;
-
+let numMaxTurnTime = 60;
+let maxTurnTime = false;
+let turnTimer; // Variable to hold the timer
+let timeLeft = numMaxTurnTime; // Initial time left for the turn //TODO: Check if this still works and if it now adapts properly based on how much you change numMaxTurntime in the settings.
+let timeAttackEnabled = false;
 
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
@@ -60,7 +64,7 @@ function startGame() {
       
   
   }
-  
+  //TODO: Add a check here to see if timeAttackMode has been activated and if the kind of time decrease and the stating time and the amout that gets subtracted or divided by is set, set whichever one of them is not set.
   // Assign random colors to players
   const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'orange', 'magenta', 'cyan', 'black', 'maroon', 'teal'];
   playerColors = [];
@@ -199,6 +203,7 @@ function endTurn() {
   if (turnCount % numPlayers === 0) {
     roundCount++; // Increase roundCounter when turnCount is divisible by numPlayers
   } //POT ERROR: this used to be at the start of beginturn
+  
   console.log(messages)
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   document.getElementById('endTurnBtn').style.display = 'none';
@@ -224,6 +229,14 @@ function endTurn() {
 
     // You can add further logic here to display the final scores or perform any other end-game actions.
   }
+  if (maxTurnTime) {
+    clearInterval(turnTimer); // Stop the timer
+    if (timeAttackEnabled) {
+      timeLeft = numMaxTurnTime - (playerTurnCounts[playerNames[currentPlayerIndex]] * 5) //Check if this actually sets timeleft based on the next player's amount of turns.
+    } else {
+      timeLeft = numMaxTurnTime;
+    } // Reset time left TODO: Check if timeattack is set and if it is calculate it based based on what turn it is for the next player, so the player after the currrentplayer.
+  }
   currentPlayerColor = playerColors[currentPlayerIndex];
 }
 
@@ -236,6 +249,9 @@ function beginTurn() {
 
   console.log(messages)
   votesDiv.innerHTML = '';
+  if (maxTurnTime) {
+    startTimer();
+  }
   if (devTestSetting === true) {
     displayAssignedColors(playerColors);
   }
@@ -1024,6 +1040,11 @@ function saveSettings() {
   fadedColorStartEnabled = document.getElementById('fadedColorStart').checked;
   numStartFadedColors = document.getElementById('numStartFadedColors').value;
   fadedColorPassivePoints = document.getElementById('fadedColorPassivePoints').value;
+  maxTurnTime = document.getElementById('maxTurnTime').checked;
+  numMaxTurnTime = document.getElementById('numMaxTurnTime').value;
+  timeLeft = numMaxTurnTime;
+  timeAttackEnabled = document.getElementById('timeAttackMode').checked;
+  
   
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings
@@ -1102,4 +1123,19 @@ function assignFadedColors(numFadedColors) {
   });
 
   return fadedColorsAssigned;
+}
+
+function startTimer() {
+  turnTimer = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(turnTimer);
+      timeLeft = numMaxTurnTime;
+      endTurn(); // Trigger end of turn when time runs out
+      alert("Time's up! Turn ended.");
+      console.log('timer just ran out.')
+    } else {
+      console.log("timer is working" + timeLeft + " time left.")
+    }
+  }, 1000); // Update timer every second
 }

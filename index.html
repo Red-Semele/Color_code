@@ -52,10 +52,19 @@
         <label for="devTestSetting">
         <input type="checkbox" id="devTestSetting"> Enable devTesting things
         </label><br>
-        <label for="fadedColorStart">
-            <input type="checkbox" id="fadedColorStart"> Start out with (currently 2, will be changeable) faded-colors
+        <label for="fadedColorStart"> Start out with X faded-colors</label>
+            <input type="checkbox" id="fadedColorStart"> 
             <input type="number" id="numStartFadedColors" min="3" max="12">
+            <br>
+        <label for="maxTurnTime"> Make each turn have a limited amount of maximum time.</label>
+            <input type="checkbox" id="maxTurnTime"> 
+            <input type="number" id="numMaxTurnTime" min="10" max="600">
+            <br>
+
+        <label for="timeAttackMode">
+            <input type="checkbox" id="timeAttackMode"> Time attack mode? Turn-time for each player decreases each time. Subtracts points of the player each time they take too long.
             </label><br>
+
             
 
 

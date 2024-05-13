@@ -30,6 +30,7 @@ let roundVoted = roundCount;
 let fadedColorMessages = [];
 let spyMessages = [];
 let fadedColorStartEnabled = false;
+let fadedColorPassivePoints = 1;
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -662,7 +663,7 @@ function checkVotes() {
         deductPoints(currentPlayerName, playerPoints[currentPlayerName])
       } else {
       alert(`The majority still thinks it was you.`)
-      awardPoints(currentPlayerName, (1)) //TODO: Make a setting for how much points each faded color gains per turn.
+      awardPoints(currentPlayerName, (fadedColorPassivePoints)) //TODO: Make a setting for how much points each faded color gains per turn.
       }
     } else {
       alert(`You are currently not found out.`)
@@ -1022,6 +1023,7 @@ function saveSettings() {
   devTestSetting = document.getElementById('devTestSetting').checked;
   fadedColorStartEnabled = document.getElementById('fadedColorStart').checked;
   numStartFadedColors = document.getElementById('numStartFadedColors').value;
+  fadedColorPassivePoints = document.getElementById('fadedColorPassivePoints').value;
   
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings

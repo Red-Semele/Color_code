@@ -34,6 +34,8 @@
     </div>
     <div id="gameSettings">
         <h2>Checkbox Settings</h2>
+        <p>Put the amount of points faded gain each turn passively here:</p>
+        <input type="number" id="fadedColorPassivePoints" min="1" max="20">
 
         <label for="eraseMessages">
         <input type="checkbox" id="eraseMessages"> Erase messages
@@ -52,7 +54,10 @@
         </label><br>
         <label for="fadedColorStart">
             <input type="checkbox" id="fadedColorStart"> Start out with (currently 2, will be changeable) faded-colors
+            <input type="number" id="numStartFadedColors" min="3" max="12">
             </label><br>
+            
+
 
         <label for="revCost">initial revive cost:</label>
         <input type="range" id="revCost" min="1" max="10" step="1">
@@ -104,11 +109,13 @@
                     <option value="yellow">Yellow</option>
                     <option value="purple">Purple</option>
                 </select>
-                <label for="sendAs">Send as:</label>
-                <select id="sendAs">
-                    <option value="true">Your True Color</option>
-                    <option value="faded">Faded Color</option>
-                </select>
+                <div id="sendAsDiv">
+                    <label for="sendAs">Send as:</label>
+                    <select id="sendAs">
+                        <option value="true">Your True Color</option>
+                        <option value="faded">Faded Color</option>
+                    </select>
+                </div>
             
                 <input type="text" id="message">
                 <button onclick="sendMessage()">Send</button>
@@ -177,6 +184,8 @@
             <div id="messageDisplay">
                 <p>Messages:</p>
                 <div id="messages"></div>
+            </div>
+            <div id="fadedMessageDisplay">
                 <p>Faded color messages:</p>
                 <div id="fadedMessages"></div>
             </div>
@@ -188,7 +197,7 @@
             <select id="scramble-color"></select>
             <button onclick="scrambleMessage(message)">Scramble a message</button>
             <input type="text" id="fadedColorMessage">
-            <button onclick="fadedColorChat()">Send a message to all faded colors (Not functional yet)</button>
+            <button onclick="fadedColorChat()">Send a message to all faded colors</button>
         </div>
         <div id="endGame">
             <!-- End of game information will be displayed here -->

@@ -29,6 +29,7 @@ let playerTurnCounts = {}//Object to track how many turns each player has had.
 let roundVoted = roundCount;
 let fadedColorMessages = [];
 let spyMessages = [];
+let fadedColorStartEnabled = false;
 
 
 const votesDiv = document.getElementById('colorVotesTable');
@@ -38,6 +39,8 @@ document.getElementById('sendAs').style.display = 'none';
 document.getElementById('sendMessageAction').style.display = 'none';
 document.getElementById('spyAction').style.display = 'none';
 document.getElementById('fakeAction').style.display = 'none';
+document.getElementById('sendAsDiv').style.display = 'none';
+document.getElementById('fadedMessageDisplay').style.display = 'none';
 
 
 
@@ -126,7 +129,7 @@ function startGame() {
   currentPlayerColor = playerColors[0];
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   if (fadedColorStartEnabled === true) {
-    assignFadedColors(2); //TODO: Make this a changable value in the settings
+    assignFadedColors(numStartFadedColors); //TODO: Make this a changable value in the settings
   }
   beginTurn()
   
@@ -201,6 +204,7 @@ function endTurn() {
   document.getElementById('playerOptions').style.display = 'none';
   document.getElementById('fadedOptions').style.display = 'none';
   document.getElementById('messageDisplay').style.display = 'none';
+  document.getElementById('fadedMessageDisplay').style.display = 'none';
   
   
   currentPlayerIndex++;
@@ -244,9 +248,14 @@ function beginTurn() {
   if (currentPlayerIsFaded) {
     document.getElementById('fadedOptions').style.display = 'block'; //TODO: If a new player becomes faded then take all their points and divide them between all the other faded people, except for the new one. This should give an incentive for the other faded colors to help others find out the truth more.But also the player has to balance giving themselves away and giving the other on eaway.
     document.getElementById('sendAs').style.display = 'inline';
+    document.getElementById('sendAsDiv').style.display = 'inline';
+    document.getElementById('fadedMessageDisplay').style.display = 'inline';
+    
   } else {
     document.getElementById('fadedOptions').style.display = 'none';
     document.getElementById('sendAs').style.display = 'none';
+    document.getElementById('sendAsDiv').style.display = 'none';
+    document.getElementById('fadedMessageDisplay').style.display = 'none';
     console.log(currentPlayerIsFaded)
   }
   // Show game elements and hide begin turn button
@@ -255,6 +264,7 @@ function beginTurn() {
   document.getElementById('playerOptions').style.display = 'inline';
   document.getElementById('messageDisplay').style.display = 'inline';
   updateVoteOptions();
+  displayPlayerPoints()
   displayMessages();
   displayColorVotes();
   displayFadedColorChat ();
@@ -454,6 +464,9 @@ function colorVote() {
   const voteNameSelect = document.getElementById('vote-name');
   const voteColor = document.getElementById('vote-color').value;
   const voteName = document.getElementById('vote-name').value;
+
+  
+  
   voter = currentPlayerColor
   console.log("colorVoteCheck")
   console.log(currentPlayerColor)
@@ -620,7 +633,6 @@ function checkVotes() {
   }
   
   currentPlayerIsFaded = fadedColors.hasOwnProperty(currentPlayerColor);
-  if (!currentPlayerIsFaded) {
     //TODO: Check if this triggers or not it should only trigger if the curentplayer is not a fadedcolor.
     console.log("numCorrectVotes")
     console.log(numCorrectVotes)
@@ -629,33 +641,35 @@ function checkVotes() {
     if (numCorrectVotes > ((numPlayers - (1 + fadedColorCount)) / 2)) { 
       //TODO: For some reason the faded color math doesn't seem to work anymore. Check this out
       console.log((numPlayers - (1 + fadedColorCount) / 2)) //TODO: Check if theis part of the gamemath seems to work, I added the fadedcolorcount to what should be subtracted.
-      //TODO: do numplayers - (1 + amount of fadedplayers)
-      alert(`You got found out. You are now a faded color.`);
-      fadedColorCount += 1
-      fadedColors[currentPlayerColor] = true;
-      if ((Object.keys(fadedColors).length - 1) !== 0) {
-        //The above line is to make sure you don't divide by zero
-        fadedColorStolenPoints = playerPoints[currentPlayerName]/ ( Object.keys(fadedColors).length - 1)
-        console.log("fadedColorStolenPoints" + fadedColorStolenPoints)
-        console.log( Object.keys(fadedColors).length)
-        playerColors.forEach(playerColor => {
-          if (fadedColors.hasOwnProperty(playerColor)){
-            awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And then replace playercolor here by that.
-          }
-          console.log(fadedColorStolenPoints) //TODO: For some reason there is an error right next to it
-          //TODO: Test out this experimental code, check out to see if this works or not. Alos, I want it to not trigger for each playerName but for each playername in fadedcolor
-        });
+      //TODO: Check if this code is still corect or not.
+      if (!currentPlayerIsFaded) {
+        alert(`You got found out. You are now a faded color.`);
+        fadedColorCount += 1
+        fadedColors[currentPlayerColor] = true;
+        if ((Object.keys(fadedColors).length - 1) !== 0) {
+          //The above line is to make sure you don't divide by zero
+          fadedColorStolenPoints = playerPoints[currentPlayerName]/ ( Object.keys(fadedColors).length - 1)
+          console.log("fadedColorStolenPoints" + fadedColorStolenPoints)
+          console.log( Object.keys(fadedColors).length)
+          playerColors.forEach(playerColor => {
+            if (fadedColors.hasOwnProperty(playerColor)){
+              awardPoints(playerColor, fadedColorStolenPoints) //TODO: Find a way to check the name based on the color. And then replace playercolor here by that.
+            }
+            console.log(fadedColorStolenPoints) //TODO: For some reason there is an error right next to it
+            //TODO: Test out this experimental code, check out to see if this works or not. Alos, I want it to not trigger for each playerName but for each playername in fadedcolor
+          });
+        }
+        deductPoints(currentPlayerName, playerPoints[currentPlayerName])
+      } else {
+      alert(`The majority still thinks it was you.`)
+      awardPoints(currentPlayerName, (1)) //TODO: Make a setting for how much points each faded color gains per turn.
       }
-      
-      deductPoints(currentPlayerName, playerPoints[currentPlayerName])
+    } else {
+      alert(`You are currently not found out.`)
       
     }
-  } else {
-    alert(`The majority still thinks it was you.`)
-    awardPoints(currentPlayerName, (1)) //TODO: Make a setting for how much points each faded color gains per turn.
+    displayPlayerPoints()
   }
-  displayPlayerPoints()
-}
 
 function specialMove() {
   const fadedColor = currentPlayerColor;
@@ -1007,6 +1021,7 @@ function saveSettings() {
   eraseMessages = document.getElementById('eraseMessages').checked;
   devTestSetting = document.getElementById('devTestSetting').checked;
   fadedColorStartEnabled = document.getElementById('fadedColorStart').checked;
+  numStartFadedColors = document.getElementById('numStartFadedColors').value;
   
   // You can perform further actions here, like saving to localStorage or sending to server
   // For now, let's just log the settings

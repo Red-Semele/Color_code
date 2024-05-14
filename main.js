@@ -36,6 +36,7 @@ let maxTurnTime = false;
 let turnTimer; // Variable to hold the timer
 let timeLeft = numMaxTurnTime; // Initial time left for the turn //TODO: Check if this still works and if it now adapts properly based on how much you change numMaxTurntime in the settings.
 let timeAttackEnabled = false;
+let causeOfGameEnd = document.getElementById('causeOfGameEnd')
 
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
@@ -46,6 +47,7 @@ document.getElementById('spyAction').style.display = 'none';
 document.getElementById('fakeAction').style.display = 'none';
 document.getElementById('sendAsDiv').style.display = 'none';
 document.getElementById('fadedMessageDisplay').style.display = 'none';
+document.getElementById('causeOfGameEnd').style.display = 'none';
 
 
 
@@ -328,7 +330,7 @@ function beginTurn() {
       const roundSent = roundCount
       const faked = false
         messages.push({ playerColor, message, receivingColor, roundSent, faked });
-        console.log("Player color after assignment:", playerColor);
+        console.log("Player color after assignment:" + playerColor);
         displayMessages();
         actionButtons();
         document.getElementById('message').value = "";
@@ -460,7 +462,7 @@ function beginTurn() {
     messagesDiv.innerHTML = ''; // Clear previous messages before appending new ones
     //messagesDiv.innerHTML = '';
     messages.forEach(msg => {
-      console.log(msg.receivingColor + "Receciever")
+      console.log(msg.receivingColor + "Reciever")
       console.log(currentPlayerColor)
       if (msg.receivingColor === currentPlayerColor) {
         const messageDiv = document.createElement('div');
@@ -643,7 +645,15 @@ function checkVotes() {
   const totalVotesForPlayer = (numCorrectVotes + numWrongVotesTotal)
   if (playerTurnCounts[currentPlayerName] > 1) {
     alert(`You received ${numCorrectVotes} correct votes out of ${totalVotesForPlayer} total votes. That means you Received ${numWrongVotesTotal} wrong votes.`);
-    awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+    if (fadedColorStartEnabled) {
+      if (currentPlayerIsFaded) {
+        awardPoints(currentPlayerName, (10*numWrongVotesTotal)) //TODO: Set how many times the player's points get boosted per wrong answer with the start fadedcolorgamemode.
+      } else {
+        awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+      }
+    } else {
+      awardPoints(currentPlayerName, (1*numWrongVotesTotal))
+    }
     deductPoints(currentPlayerName, (2*numCorrectVotes))
   } else {
     return;
@@ -709,13 +719,19 @@ function reviveFadedColor() {
   const revCostIncRule = document.getElementById('revCostIncreaseRule').value;
   revivePointCostIncreaseMultiplier = document.getElementById('revCostIncrease').value;
   if (playerPoints[currentPlayerName] >= revivePointCost[currentPlayerName]) {
-    deductPoints(currentPlayerName, revivePointCost)
+    deductPoints(currentPlayerName, revivePointCost[currentPlayerName])
     delete fadedColors[currentPlayerColor];
     console.log(currentPlayerColor + " just revived.")
     document.getElementById('fadedOptions').style.display = 'none';
     document.getElementById('sendAs').style.display = 'none';
     //TODO: Give an in game prompt that is not a pop-up to tell the player that they got revived
     alert("You just revived.");
+    if (fadedColorStartEnabled) {
+      alert("Game over, a faded color just revived.") //TODO: Make this visually update the endgame part. To properly display the cause of the endgame function being called. (Maybe add a div that is called "cause of endgame")
+      causeOfGameEnd.innerHTML = "Cause of ended game: A faded color revived.";
+      
+      endGame()
+    }
     fadedColorCount -= 1
     if (revCostIncRule === "noIncrease") {
 
@@ -899,6 +915,7 @@ function displayPlayerPoints() {
 }
 
 function endGame() {
+  document.getElementById('causeOfGameEnd').style.display = 'inline';
   const endGameDiv = document.getElementById('endGame');
   endGameDiv.innerHTML = '<h2>End of Game</h2>';
 
@@ -1037,7 +1054,7 @@ function storeMessagesForRound() {
 function saveSettings() {
   eraseMessages = document.getElementById('eraseMessages').checked;
   devTestSetting = document.getElementById('devTestSetting').checked;
-  fadedColorStartEnabled = document.getElementById('fadedColorStart').checked;
+  fadedColorStartEnabled = document.getElementById('fadedColorStart').checked; //TODO: Make this also activate the gamemode, give extra points if they get a guess wrong.
   numStartFadedColors = document.getElementById('numStartFadedColors').value;
   fadedColorPassivePoints = document.getElementById('fadedColorPassivePoints').value;
   maxTurnTime = document.getElementById('maxTurnTime').checked;

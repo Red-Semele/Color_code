@@ -48,6 +48,8 @@ document.getElementById('fakeAction').style.display = 'none';
 document.getElementById('sendAsDiv').style.display = 'none';
 document.getElementById('fadedMessageDisplay').style.display = 'none';
 document.getElementById('causeOfGameEnd').style.display = 'none';
+document.getElementById('gameSettingsModes').style.display = 'none';
+document.getElementById('gameSettingsBalancing').style.display = 'none';
 
 
 
@@ -1155,4 +1157,29 @@ function startTimer() {
       console.log("timer is working" + timeLeft + " time left.")
     }
   }, 1000); // Update timer every second
+}
+
+function showGameModes() {
+  toggleDisplay('gameSettingsModes');
+}
+
+function showBalancing() {
+  toggleDisplay('gameSettingsBalancing');
+}
+
+function toggleDisplay(elementId) {
+  const element = document.getElementById(elementId);
+  const button = document.getElementById(elementId + 'Button');
+  if (element.style.display === 'inline') {
+    element.style.display = 'none';
+    if (button) {
+      button.innerHTML = button.dataset.originalText || button.innerHTML;
+    }
+  } else {
+    element.style.display = 'inline';
+    if (button) {
+      button.dataset.originalText = button.innerHTML;
+      button.innerHTML = 'Go back';
+    }
+  }
 }

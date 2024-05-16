@@ -34,54 +34,66 @@
     </div>
     <div id="gameSettings">
         <h2>Checkbox Settings</h2>
-        <p>Put the amount of points faded gain each turn passively here:</p>
-        <input type="number" id="fadedColorPassivePoints" min="1" max="20">
+        <button onclick="showBalancing()" id = "gameSettingsBalancingButton">Alter game balance</button>
+        <br>
+        <div id = "gameSettingsBalancing">
+            <p>Put the amount of points faded gain each turn passively here:</p>
+            <input type="number" id="fadedColorPassivePoints" min="1" max="20">
 
-        <label for="eraseMessages">
-        <input type="checkbox" id="eraseMessages"> Erase messages
-        </label><br>
-
-        <label for="reviveRulesApplication">How to keep track of the revival cost increases and/or the limited revives?:</label>
+            <label for="eraseMessages">
+            <input type="checkbox" id="eraseMessages"> Erase messages
+            </label><br>
+            <label for="reviveRulesApplication">How to keep track of the revival cost increases and/or the limited revives?:</label>
                 <select id="reviveRulesApplication">
                     <option value="shared">Shared increase of cost and limit</option>
                     <option value="separate">Seperate increase of cost and limit</option>
                 </select>
-        </label><br>
+            </label><br>
+            <label for="revCost">initial revive cost:</label>
+            <input type="range" id="revCost" min="1" max="10" step="1">
+            <span id="revCostValue" class="slider-value"></span><br>
+
+            <label for="revCostIncreaseRule">How do you want to increase the revival cost?:</label>
+            <select id="revCostIncreaseRule">
+                <option value="noIncrease">No increase (fixed cost)</option>
+                <option value="multiIncrease">Cost multiplication</option>
+                <option value="expoIncrease">Cost exponentiation</option>
+            </select>
+
+            <label for="revCostIncrease">Revive cost increase:</label>
+            <input type="range" id="revCostIncrease" min="1" max="10" step="0.25">
+            <span id="revCostIncreaseValue" class="slider-value"></span>
+        </div>
+        
+
+        
                 
 
         <label for="devTestSetting">
         <input type="checkbox" id="devTestSetting"> Enable devTesting things
         </label><br>
-        <label for="fadedColorStart"> Start out with X faded-colors</label>
-            <input type="checkbox" id="fadedColorStart"> 
-            <input type="number" id="numStartFadedColors" min="3" max="12">
-            <br>
+        <button onclick="showGameModes()" id = "gameSettingsModesButton">Choose game modes</button>
+        <br>
+        <div id = "gameSettingsModes">
+            <label for="fadedColorStart"> Start out with X faded-colors. If they revive the game is over.</label>
+                <input type="checkbox" id="fadedColorStart"> 
+                <input type="number" id="numStartFadedColors" min="3" max="12">
+                <br>
+            <label for="timeAttackMode">
+                <input type="checkbox" id="timeAttackMode"> Time attack mode? Turn-time for each player decreases each time. Subtracts points of the player each time they take too long.
+            </label><br>
+        </div>
         <label for="maxTurnTime"> Make each turn have a limited amount of maximum time.</label>
             <input type="checkbox" id="maxTurnTime"> 
             <input type="number" id="numMaxTurnTime" min="10" max="600">
             <br>
 
-        <label for="timeAttackMode">
-            <input type="checkbox" id="timeAttackMode"> Time attack mode? Turn-time for each player decreases each time. Subtracts points of the player each time they take too long.
-        </label><br>
+       
 
             
 
 
-        <label for="revCost">initial revive cost:</label>
-        <input type="range" id="revCost" min="1" max="10" step="1">
-        <span id="revCostValue" class="slider-value"></span><br>
-
-        <label for="revCostIncreaseRule">How do you want to increase the revival cost?:</label>
-        <select id="revCostIncreaseRule">
-            <option value="noIncrease">No increase (fixed cost)</option>
-            <option value="multiIncrease">Cost multiplication</option>
-            <option value="expoIncrease">Cost exponentiation</option>
-        </select>
-
-        <label for="revCostIncrease">Revive cost increase:</label>
-        <input type="range" id="revCostIncrease" min="1" max="10" step="0.25">
-        <span id="revCostIncreaseValue" class="slider-value"></span>
+        
 
         <button onclick="saveSettings()">Save Settings</button>
     </div>

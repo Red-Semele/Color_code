@@ -87,6 +87,16 @@
             <input type="checkbox" id="maxTurnTime"> 
             <input type="number" id="numMaxTurnTime" min="10" max="600">
             <br>
+        <label for="revealRandomNames"> Reveal X amount of names every Y turns to Z players.</label>
+            <input type="checkbox" id="revealRandomNames"> 
+            <label for="revealRandomNamesRandomSettings"> Randomly decide what settings to use, changes each time it's used.</label>
+            <input type="checkbox" id="revealRandomNamesRandomSettings"> 
+            <input type="number" id="revealRandomNamesNamesRevealed" min="1" max="30">
+            <input type="number" id="revealRandomNamesRevealedTo" min="1" max="30">
+            <input type="number" id="revealRandomNamesRoundInterval" min="1" max="30">
+            <br>
+        <br>
+        
 
        
 
@@ -120,6 +130,7 @@
                 
 
             </div>
+            <div id="revealInfo"></div>
             <div id="playerPoints"></div>
             <div id="sendMessageAction">
                 <label for="message">Message:</label>
@@ -230,6 +241,7 @@
     </div>
 </div>
 <script src="main.js"></script>
+<script src="https://unpkg.com/netplayjs@0.4.1/dist/netplay.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Get the sliders

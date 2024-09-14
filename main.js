@@ -1,5 +1,5 @@
 console.log("TEST1")
-//TODO:Search for gameState to see if you accidentaly assigned stuff wrongly, fix errors first.
+//TODO:There's a slight problem with playercolor, namely gameState.playercolor, if you ever get an error for that just changing it to playercolor will fix it.
 let gameState = {
   currentPlayerIndex : 0,
   currentPlayerColor : '', // Variable to store the current player's color
@@ -47,7 +47,8 @@ let gameState = {
   revealIdentityRevealToAmount: 0,
   revealIdentityRoundInterval: 0
 };
-console.log("TEST1")
+//currentPlayerColor = "yellow"
+//console.log("TEST1"  + "AA" + currentPlayerColor)
 const votesDiv = document.getElementById('colorVotesTable');
 document.getElementById('playerNames').style.display = 'none';
 document.getElementById('fadedOptions').style.display = 'none';
@@ -94,7 +95,7 @@ function startGame() {
   gameState.playerNames.forEach(name => {
     gameState.playerPoints[name] = 0; // Start each player with 0 points
     gameState.revivePointCost[name] = document.getElementById("revCost").value;
-    gameState.playerTurnCounts[name] = 0;
+    gameState.playerTurnCounts[name] = 1;
   });
   console.log(gameState.playerTurnCounts)
   console.log("Check of playerturncounts")
@@ -147,10 +148,13 @@ function startGame() {
   gameState.currentPlayerIndex = 0;
   // Set the current player's color to the first player's color
   gameState.currentPlayerColor = gameState.playerColors[0];
+  console.log(gameState.currentPlayerColor + "BAAAA")
   document.getElementById('beginTurnBtn').style.display = 'inline'; // Show begin turn button
   if (gameState.fadedColorStartEnabled === true) {
     assignFadedColors(numStartFadedColors); //TODO: Make this a changable value in the settings
   }
+  console.log("TEST for the lord huzah" + gameState.playerColors[0] + gameState.playerColors)
+  
   beginTurn()
   
 
@@ -311,14 +315,14 @@ function beginTurn() {
 
 
 
-
+    //TODO: Make you not able to send messages to yourself
     function sendMessage() {
       if (gameState.actionCount === gameState.actionLimit) {
         alert('You have already taken an action this turn.');
         return;
       }
       //TODO: Make it impossible to send a message without anything in it.
-      //const playerColor = gameState.playerColors[gameState.currentPlayerIndex]; //TODO: For some reason playerColor is undefined here. It shows up in my gameState.messages undefined anyway.
+       //TODO: For some reason playerColor is undefined here. It shows up in my gameState.messages undefined anyway.
       console.log(gameState.currentPlayerColor)
       gameState.currentPlayerIsFaded = gameState.fadedColors.hasOwnProperty(gameState.currentPlayerColor);
  
@@ -344,11 +348,13 @@ function beginTurn() {
       }
       const roundSent = gameState.roundCount
       const faked = false
-        gameState.messages.push({ playerColor, message, receivingColor, roundSent, faked });
-        console.log("Player color after assignment:" + gameState.playerColor);
-        displayMessages();
-        actionButtons();
-        document.getElementById('message').value = "";
+      //TODO: for some reason playercolor is undefined.
+      let playerColor = gameState.currentPlayerColor
+      gameState.messages.push({ playerColor, message, receivingColor, roundSent, faked });
+      console.log("Player color after assignment:" + gameState.playerColor);
+      displayMessages();
+      actionButtons();
+      document.getElementById('message').value = "";
     }
 
   function spyColor() {
@@ -474,14 +480,16 @@ function beginTurn() {
     
     console.log(gameState.messages)
     const messagesDiv = document.getElementById('messages');
+    let playerColor = gameState.currentPlayerColor
     messagesDiv.innerHTML = ''; // Clear previous gameState.messages before appending new ones
     //messagesDiv.innerHTML = '';
     gameState.messages.forEach(msg => {
       console.log(msg.receivingColor + "Reciever")
-      console.log(gameState.currentPlayerColor)
+      console.log(gameState.playerColor)
+     
       if (msg.receivingColor === gameState.currentPlayerColor) {
         const messageDiv = document.createElement('div');
-        messageDiv.textContent = `${msg.gameState.playerColor}: ${msg.message}`; 
+        messageDiv.textContent = `${msg.playerColor}: ${msg.message}`; 
         messagesDiv.appendChild(messageDiv);
       }
     });
@@ -511,6 +519,7 @@ function colorVote() {
     return;
   }
   gameState.roundVoted = gameState.roundCount
+  let roundVoted = gameState.roundVoted
   if (voteColor.trim() === '' || voteName.trim() === '') {
     alert('There are no vote options left. Revoke a vote if you want to change it.');
     return; // Exit the function early
@@ -525,7 +534,8 @@ function colorVote() {
     alert('Please select both a color and a name to vote.'); //TODO: Use this code to make the option dissapear.
     return; // Exit the function early
   }
-
+  console.log(gameState.voter + "VOTE")
+  let voter = gameState.voter
   gameState.colorVotes.push({ voteColor, voteName, voter, roundVoted });
   console.log(gameState.colorVotes); // Optionally, you can log the array to verify it's working
   displayColorVotes();
@@ -550,7 +560,7 @@ function displayColorVotes() {
   //messagesDiv.innerHTML = '';
   gameState.colorVotes.forEach((clrVt, index) => {
     console.log(gameState.currentPlayerColor)
-    if (clrVt.gameState.voter === gameState.currentPlayerColor) {
+    if (clrVt.voter === gameState.currentPlayerColor) {
       const voteDiv = document.createElement('div');
       voteDiv.textContent = `${clrVt.voteColor}: ${clrVt.voteName}`; 
       // Create a button to revoke the vote
@@ -626,7 +636,7 @@ function checkVotes() {
     const existingIndex = uniqueColorVotes.findIndex(uniqueVote =>
       uniqueVote.voteColor === vote.voteColor &&
       uniqueVote.voteName === vote.voteName &&
-      uniqueVote.gameState.roundVoted < vote.gameState.roundVoted
+      uniqueVote.roundVoted < vote.roundVoted
     );
 
     // If no existing vote or current vote has higher gameState.roundVoted, add it to uniqueColorVotes
@@ -641,17 +651,17 @@ function checkVotes() {
   console.log(uniqueColorVotes)
   console.log(gameState.colorVotes)
 
-  const correctVotes = uniqueColorVotes.filter(vote => vote.voteColor === gameState.currentPlayerColor && vote.voteName === gameState.currentPlayerName && vote.gameState.roundVoted < gameState.roundCount);
+  const correctVotes = uniqueColorVotes.filter(vote => vote.voteColor === gameState.currentPlayerColor && vote.voteName === gameState.currentPlayerName && vote.roundVoted < gameState.roundCount);
   const numCorrectVotes = correctVotes.length;
   // Filter votes where color is correct but name is wrong
-  const wrongNameVotes = uniqueColorVotes.filter(vote => vote.voteColor === gameState.currentPlayerColor && vote.voteName !== gameState.currentPlayerName && vote.gameState.roundVoted < gameState.roundCount);
+  const wrongNameVotes = uniqueColorVotes.filter(vote => vote.voteColor === gameState.currentPlayerColor && vote.voteName !== gameState.currentPlayerName && vote.roundVoted < gameState.roundCount);
   console.log(wrongNameVotes)
   const numWrongNameVotes = wrongNameVotes.length
   console.log("numWrongNameVotes")
   console.log(numWrongNameVotes)
 
   // Filter votes where name is correct but color is wrong
-  const wrongColorVotes = uniqueColorVotes.filter(vote => vote.voteColor !== gameState.currentPlayerColor && vote.voteName === gameState.currentPlayerName && vote.gameState.roundVoted < gameState.roundCount);
+  const wrongColorVotes = uniqueColorVotes.filter(vote => vote.voteColor !== gameState.currentPlayerColor && vote.voteName === gameState.currentPlayerName && vote.roundVoted < gameState.roundCount);
   const numWrongColorVotes = wrongColorVotes.length
   console.log("numWrongColorVotes")
   console.log(numWrongColorVotes)
@@ -787,7 +797,7 @@ function scrambleMessage() {
   gameState.messages.sort((a, b) => b.roundSent - a.roundSent);
 
   // Find the message sent by the selected color during the current turn
-  const messageIndex = gameState.messages.findIndex(msg => msg.gameState.playerColor === selectedColor);
+  const messageIndex = gameState.messages.findIndex(msg => msg.playerColor === selectedColor);
   if (messageIndex !== -1) {
   //const message = messages.find(msg => msg.gameState.playerColor === selectedColor);
   const message = gameState.messages[messageIndex].message;
@@ -841,14 +851,14 @@ function displayMessagesSentByColor(color) {
 }
 
 function updateColorOptions() {
+
   const colorSelect = document.getElementById('scramble-color');
   colorSelect.innerHTML = ''; // Clear previous options
 
   // Get the colors that sent messages during the current turn
-  //const colorsWithMessages = [...new Set(gameState.messages.map(msg => msg.gameState.playerColor))];
-  const colorsWithMessages = [...new Set(gameState.messages.filter(msg => msg.roundSent === gameState.roundCount).map(msg => msg.gameState.playerColor))];
-  console.log("colorsWithMessages:")
-  console.log(colorsWithMessages)
+  //TODO: If the first player is a ghost he can never really intercept a message like this because the roundcount increased before his second turn, probably make it work with the playe's individual rounds. It should now work
+  const colorsWithMessages = [...new Set(gameState.messages.filter(msg => msg.roundSent + 1 === gameState.playerTurnCounts[getPlayerName(msg.receivingColor)]).map(msg => msg.playerColor))];
+  //TODO: It still doesn't work perfectly well,   //console.log("colorsWithMessages:" + colorsWithMessages + "AA" + messages.roundSent + "EE" + gameState.playerTurnCounts[getPlayerName(messages.receivingColor)])
 
 
   // Populate the color select dropdown with the colors that sent gameState.messages
@@ -873,8 +883,8 @@ function updateVoteOptions() {
     
 
   // Get the colors and names previously voted on by the current player
-  const colorsVotedByPlayer = gameState.colorVotes.filter(vote => vote.gameState.voter === gameState.currentPlayerColor).map(vote => vote.voteColor);
-  const namesVotedByPlayer = gameState.colorVotes.filter(vote => vote.gameState.voter === gameState.currentPlayerColor).map(vote => vote.voteName);
+  const colorsVotedByPlayer = gameState.colorVotes.filter(vote => vote.voter === gameState.currentPlayerColor).map(vote => vote.voteColor);
+  const namesVotedByPlayer = gameState.colorVotes.filter(vote => vote.voter === gameState.currentPlayerColor).map(vote => vote.voteName);
   // Repopulate the options for the new current player
   // Repopulate the options for the new current player
   gameState.playerColors.forEach(color => {
@@ -1034,6 +1044,7 @@ function undoChoice() {
 
 function displayMessagesByRound(round) {
   const messagesDiv = document.getElementById('messages');
+  let playerColor = gameState.currentPlayerColor
   //TODO: Now use the other variable, roundSent that is pushed in the message to be able to properly check when somethign was sent, first filter out of those and then do the additional filtering.
   messagesDiv.innerHTML = ''; // Clear previous messages
 
@@ -1049,8 +1060,8 @@ function displayMessagesByRound(round) {
         console.log(gameState.currentPlayerColor);
         if (msg.receivingColor === gameState.currentPlayerColor) {
           const messageDiv = document.createElement('div');
-          messageDiv.style.color = msg.gameState.playerColor; // Set color of the sender
-          messageDiv.textContent = `${msg.gameState.playerColor}: ${msg.message}`;
+          messageDiv.style.color = msg.playerColor; // Set color of the sender
+          messageDiv.textContent = `${msg.playerColor}: ${msg.message}`;
           messagesDiv.appendChild(messageDiv);
         }
       });
@@ -1249,6 +1260,13 @@ function RevealRandomIdentities(numIdentities, numPlayers, roundInterval) {
         revealToColor: playerColor2
       });
       console.log("Pushed color") //For some reason ending  aturn on the first round trigges this already when it shouldn't. Is it because it technically can't divide by zero? Look into it tomorow.
+      if (gameState.revealRandomNamesRandomSettings === true) {
+        //TODO: Fill more of this stuff in.
+        //gameState.revealIdentityAmountOfReveals
+        //gameState.revealIdentityRoundInterval
+        //gameState.revealIdentityRevealToAmount
+        console.log("Test")
+      }
     }
   }
 
@@ -1287,3 +1305,15 @@ function revealIdentityCheck() {
     console.log("No matching player gets revealed so far.");
   }
 }
+
+function getPlayerName(color) {
+  const playerIndex = gameState.playerColors.indexOf(color);
+  const nameFound = gameState.playerNames[playerIndex]
+  if (playerIndex !== -1) {
+      console.log(nameFound + "Huzah!")
+      return nameFound; // Player number is index + 1
+  } else {
+      return `Color ${color} not found`; // Handle case where color isn't in the array
+  }
+}
+
